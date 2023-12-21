@@ -31,6 +31,7 @@ size_t hashGrid(const vector<vector<char>> &grid) {
   return combinedHash;
 }
 
+// FIXME Could be cleaner
 void tiltGrid(vector<vector<char>> &grid, Direction direction) {
   int height = grid.size();
   int width = grid[0].size();

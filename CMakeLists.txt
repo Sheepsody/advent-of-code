@@ -23,6 +23,7 @@ set(DAYS_SOURCE_FILES
     day12.cpp
     day13.cpp
     day14.cpp
+    day15.cpp
 )
 
 # Add executable for each day
