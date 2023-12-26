@@ -139,6 +139,87 @@ char execute(Input<int> &input,
   return rule[0];
 }
 
+// Get all possible combinations
+long long getAllComb(const unordered_map<string, Workflow> &workflows) {
+  long long count = 0;
+  queue<Input<pair<int, int>>> q;
+  q.push({
+      .x = {1, 4000},
+      .m = {1, 4000},
+      .a = {1, 4000},
+      .s = {1, 4000},
+      .rule = "in",
+  });
+
+  while (!q.empty()) {
+    // Get top element
+    auto range = q.front();
+    q.pop();
+
+    // Termination
+    if (range.rule == "R") // Rejected
+      continue;
+    if (range.rule == "A") { // Accepted
+      long long add = 1;
+      for (auto c : {'x', 'm', 'a', 's'})
+        add *= getValue(range, c).second - getValue(range, c).first + 1;
+      count += add;
+      continue;
+    }
+
+    // Exclude bad sizes
+    bool exclude = false;
+    for (auto c : {'x', 'm', 'a', 's'})
+      if (getValue(range, c).second < getValue(range, c).first)
+        exclude = true;
+    if (exclude)
+      continue;
+
+    // Apply filters
+    bool matched = false;
+    const auto &workflow = workflows.at(range.rule);
+
+    for (const auto &r : workflow.rules) {
+      if (r.op == '<' && getValue(range, r.var).first < r.val) {
+        // New item
+        Input<pair<int, int>> newRange = range; // Copy all
+        getValue(newRange, r.var).second =
+            min(r.val - 1, getValue(newRange, r.var).second);
+        newRange.rule = r.dest;
+        q.push(newRange);
+        // Old item
+        getValue(range, r.var).first = max(r.val, getValue(range, r.var).first);
+        q.push(range);
+        matched = true;
+        break;
+      }
+      if (r.op == '>' && getValue(range, r.var).second > r.val) {
+        // New item
+        Input<pair<int, int>> newRange = range; // Copy all
+        getValue(newRange, r.var).first =
+            max(r.val + 1, getValue(newRange, r.var).first);
+        newRange.rule = r.dest;
+        q.push(newRange);
+        // Old item
+        getValue(range, r.var).second =
+            min(r.val, getValue(range, r.var).second);
+        q.push(range);
+        matched = true;
+        break;
+      }
+    }
+
+    // No filters matched
+    // Fallback
+    if (!matched) {
+      range.rule = workflow.fallback;
+      q.push(range);
+    }
+  }
+
+  return count;
+}
+
 int main(int argc, char **argv) {
   if (argc != 2) {
     cout << "Missing argument" << endl;
@@ -169,6 +250,7 @@ int main(int argc, char **argv) {
   cout << "Part a: " << count << endl;
 
   // Part b
+  cout << "Part b: " << getAllComb(workflows) << endl;
 
   // Close file
   inputFile.close();
