@@ -29,6 +29,7 @@ set(DAYS_SOURCE_FILES
     day18.cpp
     day19.cpp
     day21.cpp
+    day23.cpp
     day25.cpp
 )
 
