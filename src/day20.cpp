@@ -98,20 +98,19 @@ struct FlipFlop : public Module {
 struct Conjunction : public Module {
   int countHigh = 0; // Faster
   unordered_map<string, bool> mem{};
+  bool highSent = false;
+
+  bool isHigh() const {
+    return !all_of(this->mem.begin(), this->mem.end(),
+                   [](const auto &e) { return e.second; });
+  }
 
   vector<Pulse> process(Pulse &p) override {
-    if (p.high ^ this->mem[p.src]) {
-      if (p.high)
-        this->countHigh++;
-      else
-        countHigh--;
-    }
-
     this->mem[p.src] = p.high; // Update
 
-    bool statusHigh = true;
-    if (this->countHigh == this->mem.size())
-      statusHigh = false;
+    bool statusHigh = this->isHigh();
+    if (statusHigh)
+      highSent = true;
 
     vector<Pulse> outputs{};
     for (const auto &dst : this->dests)
@@ -190,9 +189,6 @@ pair<long, long> executeSequence(Modules &modules) {
     auto p = pulses.pq.front();
     pulses.pq.pop();
 
-    // Debug
-    // cout << p << endl;
-
     if (p.high)
       pulses.countHigh++;
     else
@@ -209,6 +205,68 @@ pair<long, long> executeSequence(Modules &modules) {
   return {pulses.countLow, pulses.countHigh};
 }
 
+long partA(ifstream &inputFile) {
+  auto modules = parse(inputFile);
+
+  long low = 0, high = 0;
+  for (int i = 0; i < 1000; i++) {
+    auto [l, h] = executeSequence(modules);
+    low += l;
+    high += h;
+  }
+
+  return low * high;
+}
+
+/*
+** Part b
+**
+** Need all inputs of conjunction nr to be low
+** => all of (lh, fk, ff, mm) have to be low
+** => Find lowest common multipliers of repetition
+**
+** &lh -> nr
+** &fk -> nr
+** &ff -> nr
+** &mm -> nr
+** &nr -> rx
+*/
+long partB(ifstream &inputFile) {
+  auto modules = parse(inputFile);
+
+  // Print inputs to conjunction
+  auto d = dynamic_cast<Conjunction *>(modules["nr"].get())->mem;
+  unordered_map<string, long> conjTime;
+  for (auto &[k, _] : d)
+    conjTime[k] = -1;
+
+  int i = 0;
+  while (true) {
+    i++;
+
+    // Execute sequence
+    auto _ = executeSequence(modules);
+
+    // Update status
+    for (const auto &[conj, status] : conjTime)
+      if (status == -1 &&
+          dynamic_cast<Conjunction *>(modules[conj].get())->highSent)
+        conjTime[conj] = i;
+
+    // Check all passed
+    if (all_of(conjTime.begin(), conjTime.end(),
+               [](const auto &p) { return p.second != -1; }))
+      break;
+  }
+
+  // Compute LCM (Last Common Multiplier)
+  long r = 1;
+  for (auto &[_, v] : conjTime)
+    r = lcm(r, v);
+
+  return r;
+}
+
 int main(int argc, char **argv) {
   if (argc != 2) {
     cout << "Missing argument" << endl;
@@ -223,16 +281,14 @@ int main(int argc, char **argv) {
     return 1; // Return an error code
   }
 
-  // Parse input
-  auto modules = parse(inputFile);
+  // Part a
+  cout << "Part a: " << partA(inputFile) << endl;
 
-  long low = 0, high = 0;
-  for (int i = 0; i < 1000; i++) {
-    auto [l, h] = executeSequence(modules);
-    low += l;
-    high += h;
-  }
-  cout << "Part a: " << low * high << endl;
+  inputFile.clear(); // Clear any error flags
+  inputFile.seekg(
+      0, std::ios::beg); // Move the position to the beginning of the file
+
+  cout << "Part a: " << partB(inputFile) << endl;
 
   // Close file
   inputFile.close();
