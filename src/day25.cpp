@@ -150,6 +150,9 @@ int main(int argc, char **argv) {
   cout << "Part a: " << partitions.first.size() * partitions.second.size()
        << endl;
 
+  // Part b : ok
+  cout << "Part a: " << 1 << endl;
+
   // Close file
   inputFile.close();
 
