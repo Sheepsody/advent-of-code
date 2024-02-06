@@ -1,7 +1,4 @@
-use std::{
-    cmp::Ordering,
-    collections::{BinaryHeap, HashSet},
-};
+use std::{cmp::Ordering, collections::BinaryHeap};
 
 // Alias for vec vec u8
 type Grid = Vec<Vec<i16>>;

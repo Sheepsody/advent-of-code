@@ -1,6 +1,7 @@
+#[allow(dead_code)]
 struct Packet {
     version: u32,
-    tid: u32,
+    tid: u32, // Never used
     subpackets: Option<Vec<Packet>>,
     value: u64,
 }
