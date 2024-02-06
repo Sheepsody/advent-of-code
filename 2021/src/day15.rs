@@ -131,6 +131,6 @@ mod tests {
         };
 
         assert_eq!(part1(&parse(sample)), 40);
-        assert_eq!(part1(&parse(sample)), 315);
+        assert_eq!(part2(&parse(sample)), 315);
     }
 }
