@@ -34,27 +34,6 @@ fn part1(area: &Area) -> i32 {
     vmax * (vmax + 1) / 2
 }
 
-fn get_positive_root(a: f64, b: f64, c: f64) -> Option<f64> {
-    let discriminant = b * b - 4.0 * a * c;
-
-    if discriminant < 0.0 {
-        return None;
-    }
-
-    let sqrt_discriminant = f64::sqrt(discriminant);
-
-    let t1 = (-b + sqrt_discriminant) / (2.0 * a);
-    let t2 = (-b - sqrt_discriminant) / (2.0 * a);
-
-    if t1 > 0.0 {
-        Some(t1)
-    } else if t2 > 0.0 {
-        Some(t2)
-    } else {
-        None
-    }
-}
-
 #[aoc(day17, part2)]
 fn part2(area: &Area) -> usize {
     (1..=area.xmax)
