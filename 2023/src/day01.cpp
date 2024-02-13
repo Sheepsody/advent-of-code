@@ -20,7 +20,7 @@ int part_one(string line) {
   return decimal(*first) * 10 + decimal(*last);
 }
 
-vector<std::string> digits{"one", "two",   "three", "four", "five",
+vector<std::string> digits{"one", "two", "three", "four", "five",
                            "six", "seven", "eight", "nine"};
 
 int get_first_char(string line) {
@@ -41,7 +41,7 @@ int get_first_char(string line) {
 
 int get_last_char(string line) {
   for (auto pos = line.rbegin(); pos != line.rend(); pos++) {
-    auto view = string_view(&(*pos), line.rend() - pos);
+    auto view = string_view(&(*pos));
 
     if (isdigit(view[0]))
       return decimal(view[0]);
@@ -55,7 +55,6 @@ int get_last_char(string line) {
   return -1;
 }
 
-// Didn't work, had to write a Python function
 int part_two(string line) {
   auto first = get_first_char(line);
   auto last = get_last_char(line);
