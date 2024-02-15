@@ -2,20 +2,16 @@
 #include "utils.cpp"
 #include <benchmark/benchmark.h>
 
-static void DAY_01_PART_1(benchmark::State &state) {
-  auto content = readFileToString("data/day-01.txt");
-  for (auto _ : state) {
-    Day01::part_one(content);
-  }
-}
-BENCHMARK(DAY_01_PART_1);
+#define BENCHMARK_FUNCTION(name, day, part)                                    \
+  static void name(benchmark::State &state) {                                  \
+    auto content = readFileToString("data/day-" #day ".txt");                  \
+    for (auto _ : state) {                                                     \
+      Day##day::part(content);                                                 \
+    }                                                                          \
+  }                                                                            \
+  BENCHMARK(name);
 
-static void DAY_01_PART_2(benchmark::State &state) {
-  auto content = readFileToString("data/day-01.txt");
-  for (auto _ : state) {
-    Day01::part_two(content);
-  }
-}
-BENCHMARK(DAY_01_PART_2);
+BENCHMARK_FUNCTION(DAY_01_PART_1, 01, part_one)
+BENCHMARK_FUNCTION(DAY_01_PART_2, 01, part_two)
 
 BENCHMARK_MAIN();
