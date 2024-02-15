@@ -1,6 +1,7 @@
 #ifndef UTILS
 #define UTILS
 
+#include <fstream>
 #include <iostream>
 #include <istream>
 #include <sstream>

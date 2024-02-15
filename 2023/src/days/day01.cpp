@@ -1,94 +1,61 @@
 #include <algorithm>
-#include <cctype>
-#include <fstream>
 #include <iostream>
 #include <numeric>
+#include <ranges>
 #include <sstream>
+#include <string_view>
 
-using namespace std;
 namespace Day01 {
 
 constexpr auto decimal = [](auto &&c) { return c - '0'; };
 constexpr auto is_digit = [](auto &&c) { return isdigit(c); };
 
-int part_one(const string_view &sv) {
-  int sum = 0;
-  size_t pos = 0;
+int part_one(std::string_view sv) {
+  auto view = sv | std::views::split('\n') |
+              std::views::filter([](auto &&s) { return !s.empty(); });
 
-  while (pos != std::string_view::npos) {
-    size_t next = sv.find('\n', pos);
-    std::string_view line = sv.substr(pos, next - pos);
+  return std::accumulate(view.begin(), view.end(), 0, [](auto sum, auto line) {
+    auto s = line | std::views::filter(is_digit);
+    auto it = s.begin();
 
-    auto first = find_if(line.begin(), line.end(), is_digit);
-    auto last = find_if(line.rbegin(), line.rend(), is_digit);
+    int first_digit = *it++ - '0';
+    int last_digit = *std::prev(s.end()) - '0';
 
-    if (!(first == line.end() || last.base() == line.begin()))
-      sum += decimal(*first) * 10 + decimal(*last);
-
-    if (next == std::string_view::npos)
-      break;
-
-    pos = next + 1;
-  }
-
-  return sum;
+    return sum + first_digit * 10 + last_digit;
+  });
 }
 
-const string_view digits[9] = {"one", "two",   "three", "four", "five",
-                               "six", "seven", "eight", "nine"};
+constexpr std::array<std::string_view, 9> SDIGITS = {
+    "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"};
 
-int get_first_char(const string_view &line) {
-  for (auto pos = line.begin(); pos != line.end(); pos++) {
-    auto view = line.substr(pos - line.begin());
+int to_digit(std::string_view sub) {
+  if (isdigit(sub[0]))
+    return decimal(sub[0]);
 
-    if (isdigit(view[0]))
-      return decimal(view[0]);
-
-    for (auto i = 0; i < 9; i++) {
-      if (view.starts_with(digits[i]))
-        return i + 1;
-    }
-  }
+  auto v = std::find_if(SDIGITS.begin(), SDIGITS.end(),
+                        [sub](auto &&s) { return sub.starts_with(s); });
+  if (v != SDIGITS.end())
+    return std::distance(SDIGITS.begin(), v) + 1;
 
   return -1;
 }
 
-int get_last_char(const string_view &line) {
-  for (auto pos = line.rbegin(); pos != line.rend(); pos++) {
-    auto view = string_view(&(*pos));
+int part_two(std::string_view sv) {
+  auto view = sv | std::views::split('\n') |
+              std::views::filter([](auto &&s) { return !s.empty(); });
 
-    if (isdigit(view[0]))
-      return decimal(view[0]);
-
-    for (auto i = 0; i < 9; i++) {
-      if (view.starts_with(digits[i]))
-        return i + 1;
+  return std::accumulate(view.begin(), view.end(), 0, [](auto sum, auto line) {
+    int first = -1;
+    int last = -1;
+    for (auto it : std::views::iota(line.begin(), line.end())) {
+      std::string_view sub(it, line.end());
+      if (auto d = to_digit(sub); d != -1) {
+        if (first == -1)
+          first = d;
+        last = d;
+      }
     }
-  }
-
-  return -1;
-}
-
-int part_two(const string_view &sv) {
-  int sum = 0;
-  size_t pos = 0;
-
-  while (pos != std::string_view::npos) {
-    size_t next = sv.find('\n', pos);
-    std::string_view line = sv.substr(pos, next - pos);
-
-    auto first = get_first_char(line);
-    auto last = get_last_char(line);
-
-    if (first != -1 && last != -1)
-      sum += first * 10 + last;
-
-    if (next == std::string_view::npos)
-      break;
-
-    pos = next + 1;
-  }
-
-  return sum;
+    return sum + first * 10 + last;
+  });
 }
 } // namespace Day01
