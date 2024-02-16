@@ -4,8 +4,11 @@
 #include <fstream>
 #include <iostream>
 #include <numeric>
+#include <ranges>
 #include <set>
 #include <sstream>
+
+namespace Day03 {
 
 using namespace std;
 
@@ -15,42 +18,31 @@ constexpr auto is_symbol = [](auto &&c) { return !(isdigit(c) or c == '.'); };
 const int directions[][2] = {{-1, -1}, {-1, 0}, {-1, 1}, {0, -1},
                              {0, 1},   {1, -1}, {1, 0},  {1, 1}};
 
-int main(int argc, char **argv) {
-  if (argc != 2) {
-    cout << "Missing argument" << endl;
-    throw;
-  }
-
-  ifstream inputFile(argv[1]);
-
-  // Check if the file is open
-  if (!inputFile.is_open()) {
-    cerr << "Error opening the file!" << endl;
-    return 1; // Return an error code
-  }
-
-  std::string line;
-  int sum_a, sum_b;
-
+vector<vector<char>> parse(string_view sv) {
   vector<vector<char>> lines;
-
-  while (std::getline(inputFile, line)) {
-    if (!line.empty())
-      lines.emplace_back(std::vector<char>(line.begin(), line.end()));
+  for (auto line :
+       sv | std::views::split('\n') |
+           std::views::filter([](auto &&x) { return !x.empty(); })) {
+    lines.emplace_back(std::vector<char>(line.begin(), line.end()));
   }
+  return lines;
+}
 
-  int width = lines[0].size(), height = lines.size();
+tuple<int, unordered_map<int, vector<int>>>
+get_gears(vector<vector<char>> &lines) {
+  int sum_a = 0;
+  int height = lines.size(), width = lines[0].size();
 
   // Store all part numbers adjacent to a gear
   unordered_map<int, vector<int>> gears;
 
-  for (int i = 0; i < lines.size(); i++) {
+  for (auto i = 0; i < height; i++) {
     bool is_adjacent = false;
     int sum = 0;
     set<int> gear_positions;
 
-    for (int j = 0; j <= lines[0].size(); j++) {
-      char c = (j != lines[i].size()) ? lines[i][j] : ' ';
+    for (auto j = 0; j <= width; j++) {
+      char c = (j != width) ? lines[i][j] : ' ';
 
       if (isdigit(c)) {
         sum = sum * 10 + decimal(c);
@@ -82,12 +74,20 @@ int main(int argc, char **argv) {
     }
   }
 
-  for (const auto &g : gears)
-    sum_b += (g.second.size() == 2) ? g.second[0] * g.second[1] : 0;
-
-  cout << "Part a: " << sum_a << endl;
-  cout << "Part b: " << sum_b << endl;
-  inputFile.close();
-
-  return 0;
+  return {sum_a, gears};
 }
+
+int part_one(vector<vector<char>> &lines) {
+  auto [sum_a, _] = get_gears(lines);
+  return sum_a;
+}
+
+int part_two(vector<vector<char>> &content) {
+  auto [_, gears] = get_gears(content);
+
+  return std::accumulate(gears.begin(), gears.end(), 0, [](auto sum, auto &g) {
+    sum += (g.second.size() == 2) ? g.second[0] * g.second[1] : 0;
+    return sum;
+  });
+}
+} // namespace Day03

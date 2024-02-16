@@ -1,5 +1,6 @@
 #include "days/day01.cpp"
 #include "days/day02.cpp"
+#include "days/day03.cpp"
 #include "utils.cpp"
 #include <benchmark/benchmark.h>
 
@@ -18,5 +19,8 @@ BENCHMARK_FUNCTION(DAY_01_PART_2, 01, part_two)
 
 BENCHMARK_FUNCTION(DAY_02_PART_1, 02, part_one)
 BENCHMARK_FUNCTION(DAY_02_PART_2, 02, part_two)
+
+BENCHMARK_FUNCTION(DAY_03_PART_1, 03, part_one)
+BENCHMARK_FUNCTION(DAY_03_PART_2, 03, part_two)
 
 BENCHMARK_MAIN();

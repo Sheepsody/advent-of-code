@@ -1,5 +1,6 @@
 #include "days/day01.cpp"
 #include "days/day02.cpp"
+#include "days/day03.cpp"
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -38,7 +39,14 @@ int main(int argc, char **argv) {
   } else if (day == 2) {
     std::cout << "Day 02 - Part 1: " << Day02::part_one(content) << std::endl;
     std::cout << "Day 02 - Part 2: " << Day02::part_two(content) << std::endl;
+  } else if (day == 3) {
+    auto parsed = Day03::parse(content);
+    std::cout << "Day 03 - Part 1: " << Day03::part_one(parsed) << std::endl;
+    std::cout << "Day 03 - Part 2: " << Day03::part_two(parsed) << std::endl;
+  } else {
+    std::cerr << "Day " << day << " not implemented" << std::endl;
+    return 1;
   }
 
-  return 1;
+  return 0;
 }
