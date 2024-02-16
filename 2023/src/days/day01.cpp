@@ -10,6 +10,8 @@ namespace Day01 {
 constexpr auto decimal = [](auto &&c) { return c - '0'; };
 constexpr auto is_digit = [](auto &&c) { return isdigit(c); };
 
+std::string_view parse(std::string_view sv) { return sv; }
+
 int part_one(std::string_view sv) {
   auto view = sv | std::views::split('\n') |
               std::views::filter([](auto &&s) { return !s.empty(); });

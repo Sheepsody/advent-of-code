@@ -1,4 +1,5 @@
 #include "days/day01.cpp"
+#include "days/day02.cpp"
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -22,17 +23,22 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  std::string day(argv[1]);
+  int day = std::stoi(argv[1]);
 
-  auto content = readFileToString("data/day-01.txt");
+  // Needs to be formatted ith leading 0
+  std::stringstream ssfilename;
+  ssfilename << "data/day-" << std::setw(2) << std::setfill('0') << day
+             << ".txt";
+  std::string filename = ssfilename.str();
+  auto content = readFileToString(filename);
 
-  if (day == "1") {
+  if (day == 1) {
     std::cout << "Day 01 - Part 1: " << Day01::part_one(content) << std::endl;
     std::cout << "Day 01 - Part 2: " << Day01::part_two(content) << std::endl;
-  } else {
-    std::cerr << "Invalid day number" << std::endl;
-    return 1;
+  } else if (day == 2) {
+    std::cout << "Day 02 - Part 1: " << Day02::part_one(content) << std::endl;
+    std::cout << "Day 02 - Part 2: " << Day02::part_two(content) << std::endl;
   }
 
-  return 0;
+  return 1;
 }
