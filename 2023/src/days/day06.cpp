@@ -1,4 +1,3 @@
-
 #include <algorithm>
 #include <cctype>
 #include <cmath>
@@ -6,13 +5,17 @@
 #include <fstream>
 #include <iostream>
 #include <numeric>
+#include <ranges>
 #include <sstream>
 #include <unordered_set>
 
+namespace Day06 {
 using namespace std;
 
 constexpr auto max_discard = numeric_limits<streamsize>::max();
 constexpr double Epsilon = 1E-200;
+
+using Input = vector<vector<double>>;
 
 // Solve 2nd order
 pair<double, double> get_roots(double duration, double record) {
@@ -51,43 +54,33 @@ double parse_line_b(const string &line) {
   return result;
 }
 
-int main(int argc, char **argv) {
-  if (argc != 2) {
-    cout << "Missing argument" << endl;
-    throw;
-  }
-
-  ifstream inputFile(argv[1]);
-
-  // Check if the file is open
-  if (!inputFile.is_open()) {
-    cerr << "Error opening the file!" << endl;
-    return 1; // Return an error code
-  }
-
+Input parse(string_view content) {
   vector<string> lines;
-  string line;
-  while (std::getline(inputFile, line))
-    if (!line.empty())
-      lines.push_back(line);
+  for (auto line : content | std::views::split('\n'))
+    lines.push_back(string(line.begin(), line.end()));
 
-  vector<double> durations = parse_line(lines[0]);
-  vector<double> records = parse_line(lines[1]);
+  return {
+      parse_line(lines[0]),
+      parse_line(lines[1]),
+      {parse_line_b(lines[0]), parse_line_b(lines[1])},
+  };
+}
 
+double part_one(const Input &parsed) {
   double result = 1;
-  for (int i = 0; i < min(durations.size(), records.size()); i++) {
-    auto roots = get_roots(durations[i], records[i]);
+  int length = min(parsed[0].size(), parsed[1].size());
+  for (int i = 0; i < length; i++) {
+    auto roots = get_roots(parsed[0][i], parsed[1][i]);
     result *= roots.second - roots.first + 1;
   }
-  cout << "Part a: " << result << endl;
-
-  double duration = parse_line_b(lines[0]);
-  double record = parse_line_b(lines[1]);
-
-  auto roots = get_roots(duration, record);
-  cout << "Part b: " << (int)round(roots.second - roots.first + 1) << endl;
-
-  inputFile.close();
-
-  return 0;
+  return (int)result;
 }
+
+double part_two(const Input &parsed) {
+  double duration = parsed[2][0];
+  double record = parsed[2][1];
+  auto roots = get_roots(duration, record);
+  return (int)round(roots.second - roots.first + 1);
+}
+
+} // namespace Day06
