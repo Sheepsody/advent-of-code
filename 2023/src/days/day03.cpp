@@ -18,7 +18,7 @@ constexpr auto is_symbol = [](auto &&c) { return !(isdigit(c) or c == '.'); };
 const int directions[][2] = {{-1, -1}, {-1, 0}, {-1, 1}, {0, -1},
                              {0, 1},   {1, -1}, {1, 0},  {1, 1}};
 
-vector<vector<char>> parse(string_view sv) {
+vector<vector<char>> parse(const string_view sv) {
   vector<vector<char>> lines;
   for (auto line :
        sv | std::views::split('\n') |
@@ -29,7 +29,7 @@ vector<vector<char>> parse(string_view sv) {
 }
 
 tuple<int, unordered_map<int, vector<int>>>
-get_gears(vector<vector<char>> &lines) {
+get_gears(const vector<vector<char>> &lines) {
   int sum_a = 0;
   int height = lines.size(), width = lines[0].size();
 
@@ -77,12 +77,12 @@ get_gears(vector<vector<char>> &lines) {
   return {sum_a, gears};
 }
 
-int part_one(vector<vector<char>> &lines) {
+int part_one(const vector<vector<char>> &lines) {
   auto [sum_a, _] = get_gears(lines);
   return sum_a;
 }
 
-int part_two(vector<vector<char>> &content) {
+int part_two(const vector<vector<char>> &content) {
   auto [_, gears] = get_gears(content);
 
   return std::accumulate(gears.begin(), gears.end(), 0, [](auto sum, auto &g) {
