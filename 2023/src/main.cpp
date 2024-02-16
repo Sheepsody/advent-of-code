@@ -6,6 +6,7 @@
 #include "days/day02.cpp"
 #include "days/day03.cpp"
 #include "days/day04.cpp"
+#include "days/day05.cpp"
 
 std::string readFileToString(const std::string &filename) {
   std::ifstream file(filename);
@@ -49,6 +50,10 @@ int main(int argc, char **argv) {
     auto parsed = Day04::parse(content);
     std::cout << "Day 04 - Part 1: " << Day04::part_one(parsed) << std::endl;
     std::cout << "Day 04 - Part 2: " << Day04::part_two(parsed) << std::endl;
+  } else if (day == 5) {
+    auto parsed = Day05::parse(content);
+    std::cout << "Day 05 - Part 1: " << Day05::part_one(parsed) << std::endl;
+    std::cout << "Day 05 - Part 2: " << Day05::part_two(parsed) << std::endl;
   } else {
     std::cerr << "Day " << day << " not implemented" << std::endl;
     return 1;

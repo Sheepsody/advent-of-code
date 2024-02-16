@@ -4,14 +4,27 @@
 #include <fstream>
 #include <iostream>
 #include <numeric>
+#include <ranges>
 #include <sstream>
 #include <unordered_set>
+
+namespace Day05 {
 
 using namespace std;
 
 constexpr auto max_discard = numeric_limits<streamsize>::max();
 
-long part_a(const vector<string> &lines) {
+vector<string> parse(const string_view &input) {
+  vector<string> lines;
+  for (auto line : input | std::views::split('\n') |
+                       std::views::filter([](auto s) { return !s.empty(); }) |
+                       std::views::transform(
+                           [](auto s) { return string(s.begin(), s.end()); }))
+    lines.push_back(line);
+  return lines;
+}
+
+long part_one(const vector<string> &lines) {
   vector<long> seeds;
 
   // Parse first line
@@ -21,7 +34,8 @@ long part_a(const vector<string> &lines) {
   seeds = vector<long>(it, end);
 
   vector<long> new_seeds;
-  for (long i = 2; i < lines.size(); i++) {
+  long height = lines.size();
+  for (auto i = 2; i < height; i++) {
     const string &line = lines[i];
 
     if (isdigit(line[0])) {
@@ -54,7 +68,7 @@ long part_a(const vector<string> &lines) {
                     [](auto a, auto b) { return min(a, b); });
 }
 
-long part_b(const vector<string> &lines) {
+long part_two(const vector<string> &lines) {
   vector<pair<long, long>> seeds;
 
   // Parse first line
@@ -65,7 +79,8 @@ long part_b(const vector<string> &lines) {
     seeds.push_back(make_pair(start, start + length - 1));
 
   vector<pair<long, long>> new_seeds;
-  for (long i = 2; i < lines.size(); i++) {
+  long height = lines.size();
+  for (auto i = 2; i < height; i++) {
     const string &line = lines[i];
 
     if (isdigit(line[0])) {
@@ -108,32 +123,4 @@ long part_b(const vector<string> &lines) {
   return accumulate(new_seeds.begin(), new_seeds.end(), LONG_MAX,
                     [](auto a, auto b) { return min(a, b.first); });
 }
-
-int main(int argc, char **argv) {
-  if (argc != 2) {
-    cout << "Missing argument" << endl;
-    throw;
-  }
-
-  ifstream inputFile(argv[1]);
-
-  // Check if the file is open
-  if (!inputFile.is_open()) {
-    cerr << "Error opening the file!" << endl;
-    return 1; // Return an error code
-  }
-
-  vector<string> lines;
-  string line;
-  while (std::getline(inputFile, line))
-    if (!line.empty())
-      lines.push_back(line);
-
-  // Print results
-  cout << "Part a: " << part_a(lines) << endl;
-  cout << "Part b: " << part_b(lines) << endl;
-
-  inputFile.close();
-
-  return 0;
-}
+} // namespace Day05
