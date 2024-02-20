@@ -8,6 +8,18 @@
 #include "days/day04.cpp"
 #include "days/day05.cpp"
 #include "days/day06.cpp"
+#include "days/day07.cpp"
+#include "days/day08.cpp"
+
+#define HANDLE_DAY(dayNumber, DayClass)                                        \
+  if (day == dayNumber) {                                                      \
+    auto parsed = DayClass::parse(content);                                    \
+    std::cout << "Day : " << dayNumber                                         \
+              << " - Part 1: " << DayClass::part_one(parsed) << std::endl;     \
+    std::cout << "Day : " << dayNumber                                         \
+              << " - Part 2: " << DayClass::part_two(parsed) << std::endl;     \
+    return 0;                                                                  \
+  }
 
 std::string readFileToString(const std::string &filename) {
   std::ifstream file(filename);
@@ -37,32 +49,14 @@ int main(int argc, char **argv) {
   std::string filename = ssfilename.str();
   auto content = readFileToString(filename);
 
-  if (day == 1) {
-    std::cout << "Day 01 - Part 1: " << Day01::part_one(content) << std::endl;
-    std::cout << "Day 01 - Part 2: " << Day01::part_two(content) << std::endl;
-  } else if (day == 2) {
-    std::cout << "Day 02 - Part 1: " << Day02::part_one(content) << std::endl;
-    std::cout << "Day 02 - Part 2: " << Day02::part_two(content) << std::endl;
-  } else if (day == 3) {
-    auto parsed = Day03::parse(content);
-    std::cout << "Day 03 - Part 1: " << Day03::part_one(parsed) << std::endl;
-    std::cout << "Day 03 - Part 2: " << Day03::part_two(parsed) << std::endl;
-  } else if (day == 4) {
-    auto parsed = Day04::parse(content);
-    std::cout << "Day 04 - Part 1: " << Day04::part_one(parsed) << std::endl;
-    std::cout << "Day 04 - Part 2: " << Day04::part_two(parsed) << std::endl;
-  } else if (day == 5) {
-    auto parsed = Day05::parse(content);
-    std::cout << "Day 05 - Part 1: " << Day05::part_one(parsed) << std::endl;
-    std::cout << "Day 05 - Part 2: " << Day05::part_two(parsed) << std::endl;
-  } else if (day == 6) {
-    auto parsed = Day06::parse(content);
-    std::cout << "Day 06 - Part 1: " << Day06::part_one(parsed) << std::endl;
-    std::cout << "Day 06 - Part 2: " << Day06::part_two(parsed) << std::endl;
-  } else {
-    std::cerr << "Day " << day << " not implemented" << std::endl;
-    return 1;
-  }
+  HANDLE_DAY(1, Day01)
+  HANDLE_DAY(2, Day02)
+  HANDLE_DAY(3, Day03)
+  HANDLE_DAY(4, Day04)
+  HANDLE_DAY(5, Day05)
+  HANDLE_DAY(6, Day06)
+  HANDLE_DAY(7, Day07)
+  HANDLE_DAY(8, Day08)
 
   return 0;
 }

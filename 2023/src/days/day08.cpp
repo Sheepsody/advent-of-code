@@ -5,11 +5,20 @@
 #include <fstream>
 #include <iostream>
 #include <numeric>
+#include <ranges>
 #include <sstream>
+#include <string_view>
 #include <unordered_set>
 
+namespace Day08 {
 using namespace std;
-constexpr auto max_discard = numeric_limits<streamsize>::max();
+
+// Parse instructions
+struct Node {
+  int left;
+  int right;
+  bool is_terminal;
+};
 
 int getIntCode(const string &line) {
   return accumulate(line.begin(), line.end(), 0,
@@ -18,37 +27,22 @@ int getIntCode(const string &line) {
 
 template <typename T> T lcm(T a, T b) { return (a * b) / std::gcd(a, b); }
 
-int main(int argc, char **argv) {
-  if (argc != 2) {
-    cout << "Missing argument" << endl;
-    throw;
-  }
-
-  ifstream inputFile(argv[1]);
-
-  // Check if the file is open
-  if (!inputFile.is_open()) {
-    cerr << "Error opening the file!" << endl;
-    return 1; // Return an error code
-  }
-
+vector<string> parse(const string_view &input) {
   vector<string> lines;
-  for (std::string line; std::getline(inputFile, line);)
-    lines.emplace_back(std::move(line));
+  for (auto line :
+       input | ranges::views::split('\n') |
+           ranges::views::filter([](auto &&line) { return !line.empty(); }))
+    lines.push_back(string(line.begin(), line.end()));
+  return lines;
+}
 
+int part_one(const vector<string> &lines) {
   // Parse lines
   std::vector<char> instructions;
   instructions.reserve(lines[0].size());
   for (const auto &c : lines[0])
     if (std::isalpha(c))
       instructions.push_back(c);
-
-  // Parse instructions
-  struct Node {
-    int left;
-    int right;
-    bool is_terminal;
-  };
 
   vector<int> nodes;
   unordered_map<int, Node> network;
@@ -76,7 +70,33 @@ int main(int argc, char **argv) {
     current = (dir == 'L') ? network[current].left : network[current].right;
   }
 
-  cout << "Part a: " << i << endl;
+  return i;
+}
+
+long part_two(const vector<string> &lines) {
+  // Parse lines
+  std::vector<char> instructions;
+  instructions.reserve(lines[0].size());
+  for (const auto &c : lines[0])
+    if (std::isalpha(c))
+      instructions.push_back(c);
+
+  vector<int> nodes;
+  unordered_map<int, Node> network;
+
+  for (const auto &line : lines)
+    if (line.size() > 15) {
+      int node_code = getIntCode(line.substr(0, 3));
+      Node node = {getIntCode(line.substr(7, 3)),
+                   getIntCode(line.substr(12, 3)), false};
+
+      if (line.substr(0, 3).find('A') != string::npos)
+        nodes.push_back(node_code);
+      if (line.substr(0, 3).find('Z') != string::npos)
+        node.is_terminal = true;
+
+      network[node_code] = node;
+    }
 
   vector<long> end_times;
   for (auto n : nodes) {
@@ -91,10 +111,6 @@ int main(int argc, char **argv) {
   long part_2 = accumulate(end_times.begin() + 1, end_times.end(), end_times[0],
                            [](long a, long b) { return lcm(a, b); });
 
-  cout << "Part b: " << part_2 << endl;
-
-  // Close file
-  inputFile.close();
-
-  return 0;
+  return part_2;
 }
+} // namespace Day08

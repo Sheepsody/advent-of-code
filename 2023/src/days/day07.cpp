@@ -7,11 +7,13 @@
 #include <fstream>
 #include <iostream>
 #include <numeric>
+#include <ranges>
 #include <sstream>
+#include <string_view>
 #include <unordered_set>
 
+namespace Day07 {
 using namespace std;
-constexpr auto max_discard = numeric_limits<streamsize>::max();
 
 // Displays the bits of a number grouped by four
 template <typename T> void display_bits(T value) {
@@ -105,28 +107,19 @@ struct {
   bool operator()(Hand a, Hand b) const { return a.score < b.score; }
 } handLess;
 
-int main(int argc, char **argv) {
-  if (argc != 2) {
-    cout << "Missing argument" << endl;
-    throw;
-  }
-
-  ifstream inputFile(argv[1]);
-
-  // Check if the file is open
-  if (!inputFile.is_open()) {
-    cerr << "Error opening the file!" << endl;
-    return 1; // Return an error code
-  }
-
-  string line;
+vector<string> parse(string_view content) {
   vector<string> lines;
-  while (std::getline(inputFile, line))
-    if (!line.empty()) {
-      lines.push_back(line);
-    }
+  for (auto line : content | std::views::split('\n')) {
+    if (line.empty())
+      continue;
+    lines.push_back(string(line.begin(), line.end()));
+  }
+  return lines;
+}
 
+int part_one(vector<string> &lines) {
   vector<Hand> hands;
+
   for (string line : lines) {
     string hand = line.substr(0, line.find(' '));
 
@@ -142,12 +135,11 @@ int main(int argc, char **argv) {
   sort(hands.begin(), hands.end(), handLess);
 
   long result = 0;
-  for (int i = 0; i < hands.size(); i++)
+  int length = hands.size();
+  for (int i = 0; i < length; i++)
     result += (i + 1) * hands[i].bid;
-  cout << "Part a: " << result << endl;
-
-  // Close file
-  inputFile.close();
-
-  return 0;
+  return result;
 }
+
+int part_two(vector<string> &lines) { return 0; }
+} // namespace Day07
