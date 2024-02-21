@@ -5,37 +5,28 @@
 #include <fstream>
 #include <iostream>
 #include <numeric>
+#include <ranges>
 #include <sstream>
 #include <unordered_set>
 
+namespace Day09 {
 using namespace std;
 constexpr auto max_discard = numeric_limits<streamsize>::max();
 
-int main(int argc, char **argv) {
-  if (argc != 2) {
-    cout << "Missing argument" << endl;
-    throw;
-  }
-
-  ifstream inputFile(argv[1]);
-
-  // Check if the file is open
-  if (!inputFile.is_open()) {
-    cerr << "Error opening the file!" << endl;
-    return 1; // Return an error code
-  }
-
-  // Parse
+vector<vector<int>> parse(const string_view &content) {
   vector<vector<int>> records;
-  for (string line; getline(inputFile, line);)
-    if (line.size() > 0) {
-      vector<int> new_record;
-      stringstream stream(line);
-      for (int num; stream >> num;)
-        new_record.push_back(num);
-      records.push_back(std::move(new_record));
-    }
+  for (auto line : content | std::views::split('\n') |
+                       std::views::filter([](auto x) { return !x.empty(); })) {
+    vector<int> new_record;
+    stringstream stream(string(line.begin(), line.end()));
+    for (int num; stream >> num;)
+      new_record.push_back(num);
+    records.push_back(std::move(new_record));
+  }
+  return records;
+}
 
+int part_one(const vector<vector<int>> &records) {
   // Part A
   int sum = 0;
   for (const auto &const_record : records) {
@@ -54,10 +45,13 @@ int main(int argc, char **argv) {
     sum += accumulate(record.begin(), record.end(), 0);
   }
 
-  cout << "Part a: " << sum << endl;
+  return sum;
+}
+
+int part_two(const vector<vector<int>> &records) {
 
   // Part B
-  sum = 0;
+  int sum = 0;
   for (const auto &const_record : records) {
     vector<int> record;
     record.reserve(const_record.size());
@@ -76,11 +70,6 @@ int main(int argc, char **argv) {
     sum += accumulate(beginning.rbegin(), beginning.rend(), 0,
                       [](int a, int b) { return b - a; });
   }
-
-  cout << "Part b: " << sum << endl;
-
-  // Close file
-  inputFile.close();
-
-  return 0;
+  return sum;
 }
+} // namespace Day09
