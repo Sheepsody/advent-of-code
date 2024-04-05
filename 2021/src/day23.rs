@@ -52,62 +52,45 @@ impl Amphipod {
     }
 }
 
-#[derive(Clone, Eq, PartialEq)]
-struct State {
+#[derive(Debug, Clone, Eq, PartialEq)]
+struct State<const LENGTH: usize> {
     energy: u32,
-    amphipods: [Amphipod; 8],
+    amphipods: [Amphipod; LENGTH],
 }
 
-impl Ord for State {
+impl<const LENGTH: usize> Ord for State<LENGTH> {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         other.energy.cmp(&self.energy)
     }
 }
 
-impl PartialOrd for State {
+impl<const LENGTH: usize> PartialOrd for State<LENGTH> {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         Some(other.energy.cmp(&self.energy))
     }
 }
 
-impl From<&str> for State {
-    fn from(input: &str) -> Self {
-        State {
-            energy: 0,
-            amphipods: input
-                .lines()
-                .skip(1)
-                .enumerate()
-                .flat_map(|(i, l)| {
-                    l.chars().skip(1).enumerate().filter_map(move |(j, c)| {
-                        match AmphipodType::try_from(c) {
-                            Some(c) => Some(Amphipod {
-                                t: c,
-                                x: i as i8,
-                                y: j as i8,
-                            }),
-                            _ => None,
-                        }
-                    })
-                })
-                .collect::<Vec<_>>()
-                .try_into()
-                .unwrap(),
-        }
-    }
-}
-
-impl State {
+impl<const LENGTH: usize> State<LENGTH> {
     fn is_goal(&self) -> bool {
         self.amphipods
             .iter()
             .all(|amphi| (amphi.x != 0) && (amphi.y == amphi.get_desty()))
     }
 
-    fn get_code(&self) -> u64 {
+    /*
+     * Compress each state into a single integer for memoization
+     */
+    fn get_code(&self) -> u128 {
         self.amphipods.iter().fold(0, |acc, amphi| {
-            (acc << 8) + ((amphi.x as u64) << 4) + (amphi.y as u64)
+            (acc << 8) + ((amphi.x as u128) << 4) + (amphi.y as u128)
         })
+    }
+
+    fn from_amphipods(amphipods: &Vec<Amphipod>) -> Self {
+        State {
+            energy: 0,
+            amphipods: amphipods.as_slice().try_into().unwrap(),
+        }
     }
 
     fn get_successors(&self) -> Vec<Self> {
@@ -117,28 +100,29 @@ impl State {
             .collect()
     }
 
-    // TODO : Fix doc
-    // Rules
-    // 1. Never stop space outside room
-    // 2. Stay same spot hallway until can enter room
+    /*
+     * Rules
+     * 1. Never stop space outside room
+     * 2. Stay same spot hallway until can enter room
+     */
     fn to_hallway(&self) -> Vec<Self> {
         self.amphipods
             .iter()
             .enumerate()
-            .filter(|(_, amphi)| {
-                let mut can_move = false;
-                // x == 1 && not dest
-                can_move |= amphi.x == 1 && amphi.y != amphi.get_desty();
-                // x == 1 && other amphipods in the room not in dest
-                can_move |= amphi.x == 1
-                    && self
-                        .amphipods
-                        .iter()
-                        .any(|a| a.y == amphi.y && a.x == 2 && a.y != a.get_desty());
-                // x == 2 && not dest && no other amphipods in the room
-                can_move |= amphi.x == 2
-                    && amphi.y != amphi.get_desty()
-                    && self.amphipods.iter().all(|a| a.y != amphi.y || a.x != 1);
+            .filter(|(_, amphi)| amphi.x != 0)
+            .filter(|(i, amphi)| {
+                // Either not in position or following not in position
+                let mut can_move = self
+                    .amphipods
+                    .iter()
+                    .any(|a| a.y == amphi.y && a.y != a.get_desty());
+
+                // No one blocking the way
+                can_move &= self
+                    .amphipods
+                    .iter()
+                    .enumerate()
+                    .all(|(j, a)| a.y != amphi.y || a.x > amphi.x || i == &j);
 
                 can_move
             })
@@ -186,10 +170,10 @@ impl State {
             })
     }
 
-    // Rules
-    // 1. never move from the hallway into a room unless that room is their destination
-    // 2. That room contains no amphipods which do not also have that room as their destination
-    // _Note:_ Works for any size of hallway
+    /* Rules
+     * 1. never move from the hallway into a room unless that room is their destination
+     * 2. That room contains no amphipods which do not also have that room as their destination
+     */
     fn to_room(&self) -> Vec<Self> {
         // Can only move amphipods in hallway
         self.amphipods
@@ -219,7 +203,7 @@ impl State {
                     .iter()
                     .filter(|&other| other.y == amphi.get_desty())
                     .count();
-                let x = 2 - count as i8;
+                let x = (LENGTH / 4 - count) as i8;
 
                 // Create new state
                 let mut amphipods = self.amphipods.clone();
@@ -237,18 +221,33 @@ impl State {
 }
 
 #[aoc_generator(day23)]
-fn parse(input: &str) -> State {
-    State::from(input)
+fn parse(input: &str) -> Vec<Amphipod> {
+    input
+        .lines()
+        .skip(1)
+        .enumerate()
+        .flat_map(|(i, l)| {
+            l.chars().skip(1).enumerate().filter_map(move |(j, c)| {
+                match AmphipodType::try_from(c) {
+                    Some(c) => Some(Amphipod {
+                        t: c,
+                        x: i as i8,
+                        y: j as i8,
+                    }),
+                    _ => None,
+                }
+            })
+        })
+        .collect::<Vec<_>>()
 }
 
 /*
  * Djikstra algorithm
  */
-#[aoc(day23, part1)]
-fn part1(board: &State) -> Option<u32> {
-    let mut dist: HashMap<u64, u32> = HashMap::new();
-    let mut heap: BinaryHeap<State> = BinaryHeap::new();
-    heap.push(board.clone());
+fn search<const LENGTH: usize>(init: State<LENGTH>) -> Option<u32> {
+    let mut dist: HashMap<u128, u32> = HashMap::new();
+    let mut heap: BinaryHeap<State<LENGTH>> = BinaryHeap::new();
+    heap.push(init.clone());
 
     while let Some(node) = heap.pop() {
         if node.is_goal() {
@@ -270,6 +269,38 @@ fn part1(board: &State) -> Option<u32> {
     return None;
 }
 
+#[aoc(day23, part1)]
+fn part1(amphipods: &Vec<Amphipod>) -> Option<u32> {
+    let board: State<8> = State::from_amphipods(amphipods);
+    search(board)
+}
+
+const AMPHIPODS_FOLDED: &str = indoc::indoc! {
+    "#############
+    #...........#
+    ###.#.#.#.###
+      #D#C#B#A#
+      #D#B#A#C#
+      #.#.#.#.#
+      #########"
+};
+
+#[aoc(day23, part2)]
+fn part2(amphipods: &Vec<Amphipod>) -> Option<u32> {
+    let amphipods: Vec<_> = chain!(
+        amphipods.iter().cloned().filter(|a| a.x == 1),
+        amphipods.iter().cloned().filter(|a| a.x == 2).map(|mut a| {
+            a.x = 4;
+            a
+        }),
+        parse(AMPHIPODS_FOLDED).into_iter(),
+    )
+    .collect();
+
+    let board: State<16> = State::from_amphipods(&amphipods);
+    search(board)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -285,52 +316,49 @@ mod tests {
         };
 
         assert_eq!(
-            State::from(sample),
-            State {
-                cost: 0,
-                amphipods: [
-                    Amphipod {
-                        t: AmphipodType::Bronze,
-                        x: 0,
-                        y: 1,
-                    },
-                    Amphipod {
-                        t: AmphipodType::Copper,
-                        x: 1,
-                        y: 4,
-                    },
-                    Amphipod {
-                        t: AmphipodType::Bronze,
-                        x: 1,
-                        y: 6,
-                    },
-                    Amphipod {
-                        t: AmphipodType::Desert,
-                        x: 1,
-                        y: 8,
-                    },
-                    Amphipod {
-                        t: AmphipodType::Amber,
-                        x: 2,
-                        y: 2,
-                    },
-                    Amphipod {
-                        t: AmphipodType::Desert,
-                        x: 2,
-                        y: 4,
-                    },
-                    Amphipod {
-                        t: AmphipodType::Copper,
-                        x: 2,
-                        y: 6,
-                    },
-                    Amphipod {
-                        t: AmphipodType::Amber,
-                        x: 2,
-                        y: 8,
-                    }
-                ]
-            }
+            parse(sample),
+            vec![
+                Amphipod {
+                    t: AmphipodType::Bronze,
+                    x: 0,
+                    y: 1,
+                },
+                Amphipod {
+                    t: AmphipodType::Copper,
+                    x: 1,
+                    y: 4,
+                },
+                Amphipod {
+                    t: AmphipodType::Bronze,
+                    x: 1,
+                    y: 6,
+                },
+                Amphipod {
+                    t: AmphipodType::Desert,
+                    x: 1,
+                    y: 8,
+                },
+                Amphipod {
+                    t: AmphipodType::Amber,
+                    x: 2,
+                    y: 2,
+                },
+                Amphipod {
+                    t: AmphipodType::Desert,
+                    x: 2,
+                    y: 4,
+                },
+                Amphipod {
+                    t: AmphipodType::Copper,
+                    x: 2,
+                    y: 6,
+                },
+                Amphipod {
+                    t: AmphipodType::Amber,
+                    x: 2,
+                    y: 8,
+                }
+            ]
         );
     }
 
@@ -343,8 +371,9 @@ mod tests {
               #A#B#C#D#
               #########"
         };
+        let state: State<8> = State::from_amphipods(&parse(sample));
 
-        assert!(parse(sample).is_goal());
+        assert!(state.is_goal());
     }
 
     #[test]
@@ -356,8 +385,9 @@ mod tests {
               #A#B#C#D#
               #########"
         };
+        let state: State<8> = State::from_amphipods(&parse(sample));
 
-        assert_eq!(parse(sample).get_successors().len(), 0);
+        assert_eq!(state.get_successors().len(), 0);
     }
 
     #[test]
@@ -369,8 +399,9 @@ mod tests {
               #A#C#A#D#
               #########"
         };
+        let state: State<8> = State::from_amphipods(&parse(sample));
 
-        assert_eq!(parse(sample).get_successors().len(), 13);
+        assert_eq!(state.get_successors().len(), 13);
     }
 
     #[test]
@@ -382,10 +413,11 @@ mod tests {
               #A#B#C#D#
               #########"
         };
+        let state: State<8> = State::from_amphipods(&parse(sample));
 
-        assert_eq!(parse(sample).get_successors().len(), 1);
-        assert_eq!(parse(sample).get_successors()[0].cost, 400);
-        assert!(parse(sample).get_successors()[0].is_goal());
+        assert_eq!(state.get_successors().len(), 1);
+        assert_eq!(state.get_successors()[0].energy, 400);
+        assert!(state.get_successors()[0].is_goal());
     }
 
     #[test]
@@ -397,8 +429,9 @@ mod tests {
               #A#B#C#D#
               #########"
         };
+        let state: State<8> = State::from_amphipods(&parse(sample));
 
-        assert_eq!(parse(sample).get_successors().len(), 2);
+        assert_eq!(state.get_successors().len(), 2);
     }
 
     #[test]
@@ -412,5 +445,18 @@ mod tests {
         };
 
         assert_eq!(part1(&parse(sample)), Some(12521));
+    }
+
+    #[test]
+    fn test_part2() {
+        let sample = indoc::indoc! {
+            "#############
+            #...........#
+            ###B#C#B#D###
+              #A#D#C#A#
+              #########"
+        };
+
+        assert_eq!(part2(&parse(sample)), Some(44169));
     }
 }
