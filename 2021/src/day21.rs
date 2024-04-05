@@ -1,5 +1,5 @@
 use itertools::Itertools;
-use std::collections::{BTreeMap, HashMap};
+use std::collections::BTreeMap;
 use std::mem;
 
 #[aoc_generator(day21)]
