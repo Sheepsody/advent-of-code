@@ -55,18 +55,19 @@ impl Amphipod {
 #[derive(Debug, Clone, Eq, PartialEq)]
 struct State<const LENGTH: usize> {
     energy: u32,
+    cost: u32,
     amphipods: [Amphipod; LENGTH],
 }
 
 impl<const LENGTH: usize> Ord for State<LENGTH> {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        other.energy.cmp(&self.energy)
+        other.cost.cmp(&self.cost)
     }
 }
 
 impl<const LENGTH: usize> PartialOrd for State<LENGTH> {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(other.energy.cmp(&self.energy))
+        Some(other.cost.cmp(&self.cost))
     }
 }
 
@@ -89,6 +90,7 @@ impl<const LENGTH: usize> State<LENGTH> {
     fn from_amphipods(amphipods: &Vec<Amphipod>) -> Self {
         State {
             energy: 0,
+            cost: 0,
             amphipods: amphipods.as_slice().try_into().unwrap(),
         }
     }
@@ -98,6 +100,16 @@ impl<const LENGTH: usize> State<LENGTH> {
             .into_iter()
             .chain(self.to_room())
             .collect()
+    }
+
+    /*
+     * Simple heuristic for A* algorithm
+     */
+    fn get_heuristic(amphipods: &[Amphipod]) -> u32 {
+        amphipods
+            .iter()
+            .map(|a| ((a.y - a.get_desty()).abs() as u32) * a.energy())
+            .sum()
     }
 
     /*
@@ -163,7 +175,11 @@ impl<const LENGTH: usize> State<LENGTH> {
                     let distance = (amphi.y - y).abs() + amphi.x;
                     let energy = self.energy + amphi.energy() * distance as u32;
 
-                    acc.push(State { energy, amphipods });
+                    acc.push(State {
+                        amphipods,
+                        energy,
+                        cost: energy + Self::get_heuristic(&amphipods),
+                    });
                 }
 
                 acc
@@ -214,7 +230,11 @@ impl<const LENGTH: usize> State<LENGTH> {
                 let distance = (amphi.y - amphi.get_desty()).abs() + x;
                 let energy = self.energy + amphi.energy() * distance as u32;
 
-                State { amphipods, energy }
+                State {
+                    amphipods,
+                    energy,
+                    cost: energy + Self::get_heuristic(&amphipods),
+                }
             })
             .collect()
     }
@@ -242,7 +262,7 @@ fn parse(input: &str) -> Vec<Amphipod> {
 }
 
 /*
- * Djikstra algorithm
+ * A* algorithm
  */
 fn search<const LENGTH: usize>(init: State<LENGTH>) -> Option<u32> {
     let mut dist: HashMap<u128, u32> = HashMap::new();
@@ -254,13 +274,13 @@ fn search<const LENGTH: usize>(init: State<LENGTH>) -> Option<u32> {
             return Some(node.energy);
         }
 
-        if &node.energy > dist.get(&node.get_code()).unwrap_or_else(|| &u32::MAX) {
+        if &node.cost > dist.get(&node.get_code()).unwrap_or_else(|| &u32::MAX) {
             continue;
         }
 
         for successor in node.get_successors() {
-            if &successor.energy < dist.get(&successor.get_code()).unwrap_or_else(|| &u32::MAX) {
-                dist.insert(successor.get_code(), successor.energy);
+            if &successor.cost < dist.get(&successor.get_code()).unwrap_or_else(|| &u32::MAX) {
+                dist.insert(successor.get_code(), successor.cost);
                 heap.push(successor);
             }
         }
