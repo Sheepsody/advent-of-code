@@ -5,13 +5,30 @@
 #include <fstream>
 #include <iostream>
 #include <numeric>
+#include <ranges>
 #include <sstream>
 #include <tuple>
 #include <unordered_set>
 #include <utility>
 
+using Key = std::tuple<int, int, int>;
+
+namespace std {
+template <> struct hash<Key> {
+  size_t operator()(const Key &p) const {
+    const auto [v1, v2, v3] = p;
+    size_t hash1 = hash<int>{}(v1);
+    size_t hash2 = hash<int>{}(v2);
+    size_t hash3 = hash<int>{}(v3);
+
+    return hash1 + (hash2 << 1) + (hash3 << 2);
+  }
+};
+
+} // namespace std
+
+namespace Day12 {
 using namespace std;
-constexpr auto max_discard = numeric_limits<streamsize>::max();
 
 struct Record {
   string rec;
@@ -45,12 +62,14 @@ Record unfold(const Record &r) {
 // Check that a given combination is valid
 bool isValid(const string &record, const vector<int> &counts) {
   int cnt = 0, idx = 0;
+  int countSize = counts.size();
+
   for (char c : record) {
     if (c == '#')
       cnt++;
     else if (cnt > 0) {
       // Count is valid
-      if (idx >= counts.size() || counts[idx] != cnt)
+      if (idx >= countSize || counts[idx] != cnt)
         return false;
       cnt = 0;
       idx++;
@@ -58,15 +77,15 @@ bool isValid(const string &record, const vector<int> &counts) {
   }
 
   // Check last cnt valid
-  return (idx == counts.size() && cnt == 0) ||
-         (idx == counts.size() - 1 && cnt == counts[idx]);
+  return (idx == countSize && cnt == 0) ||
+         (idx == countSize - 1 && cnt == counts[idx]);
 }
 
 // Counts the number of combinations
 // NOTE: returns unchanged string
 int countCombinations(int idx, string &record, vector<int> &counts) {
   // Termination condition
-  if (idx == record.size())
+  if (idx == (int)record.size())
     return isValid(record, counts) ? 1 : 0;
 
   if (record[idx] != '?')
@@ -82,27 +101,15 @@ int countCombinations(int idx, string &record, vector<int> &counts) {
   return cnt;
 }
 
-using Key = tuple<int, int, int>;
-
-template <> struct hash<Key> {
-  size_t operator()(const Key &p) const {
-    const auto [v1, v2, v3] = p;
-    size_t hash1 = hash<int>{}(v1);
-    size_t hash2 = hash<int>{}(v2);
-    size_t hash3 = hash<int>{}(v3);
-
-    return hash1 + (hash2 << 1) + (hash3 << 2);
-  }
-};
-
 long optimizedCount(int idx, int cntIdx, const string &record,
                     const vector<int> &counts, int currCnt,
                     unordered_map<Key, long> &mem) {
   // Termination condition
-  if (idx == record.size()) {
-    if (cntIdx == counts.size() && currCnt == 0)
+  int countSize = counts.size();
+  if (idx == (int)record.size()) {
+    if (cntIdx == countSize && currCnt == 0)
       return 1;
-    if (cntIdx == counts.size() - 1 && currCnt == counts[cntIdx])
+    if (cntIdx == countSize - 1 && currCnt == counts[cntIdx])
       return 1;
     return 0;
   }
@@ -122,7 +129,7 @@ long optimizedCount(int idx, int cntIdx, const string &record,
 
   // Handle the case when the current spring is operational or unknown
   if (record[idx] == '.' || record[idx] == '?') {
-    if (currCnt == 0 || (cntIdx < counts.size() && currCnt == counts[cntIdx])) {
+    if (currCnt == 0 || (cntIdx < countSize && currCnt == counts[cntIdx])) {
       count += optimizedCount(idx + 1, (currCnt == 0) ? cntIdx : cntIdx + 1,
                               record, counts, 0, mem);
     }
@@ -133,57 +140,41 @@ long optimizedCount(int idx, int cntIdx, const string &record,
   return count;
 }
 
-int main(int argc, char **argv) {
-  if (argc != 2) {
-    cout << "Missing argument" << endl;
-    throw;
-  }
-
-  ifstream inputFile(argv[1]);
-
-  // Check if the file is open
-  if (!inputFile.is_open()) {
-    cerr << "Error opening the file!" << endl;
-    return 1; // Return an error code
-  }
-
-  // Parsing
+vector<Record> parse(const string_view &content) {
   vector<Record> records;
-  for (string line; getline(inputFile, line);) {
-    size_t spacePos = line.find(' ');
+
+  for (auto line : content | std::views::split('\n') |
+                       std::views::filter([](auto x) { return !x.empty(); })) {
+    auto s = string(string(line.begin(), line.end()));
+    size_t spacePos = s.find(' ');
     if (spacePos == string::npos)
       continue;
     records.push_back(
-        {line.substr(0, spacePos), parseGroups(line.substr(spacePos + 1))});
+        {s.substr(0, spacePos), parseGroups(s.substr(spacePos + 1))});
   }
 
-  cout << "Part a: "
-       << accumulate(records.begin(), records.end(), 0,
-                     [](int cnt, Record r) {
-                       return cnt + countCombinations(0, r.rec, r.cnt);
-                     })
-       << endl;
+  return records;
+}
 
+int part_one(const vector<Record> &records) {
   int cnt = 0;
   for (auto &r : records) {
     unordered_map<tuple<int, int, int>, long> mem;
     cnt += optimizedCount(0, 0, r.rec, r.cnt, 0, mem);
   }
-  cout << "Part a optim. : " << cnt << endl;
+  return cnt;
+}
 
+long long part_two(const vector<Record> &records) {
+  vector<Record> unfoldedRecords;
   for (auto &record : records)
-    record = unfold(record);
+    unfoldedRecords.push_back(unfold(record));
 
   long long longCnt = 0;
-  for (auto &r : records) {
+  for (auto &r : unfoldedRecords) {
     unordered_map<tuple<int, int, int>, long> mem;
     longCnt += optimizedCount(0, 0, r.rec, r.cnt, 0, mem);
   }
-
-  cout << "Part b. " << longCnt << endl;
-
-  // Close file
-  inputFile.close();
-
-  return 0;
+  return longCnt;
 }
+} // namespace Day12

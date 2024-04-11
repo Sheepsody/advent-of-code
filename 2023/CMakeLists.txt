@@ -19,6 +19,7 @@ FetchContent_Declare(benchmark
         GIT_REPOSITORY https://github.com/google/benchmark.git
         GIT_TAG v1.8.3) # need main for benchmark::
 FetchContent_MakeAvailable(benchmark)
+set(BENCHMARK_ENABLE_LTO ON CACHE BOOL "Enable Link Time Optimization")
 
 # Specify the output directory for executables
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
@@ -33,3 +34,8 @@ add_executable(aoc ${SOURCES})
 
 add_executable(bench src/bench.cpp)
 target_link_libraries(bench benchmark::benchmark)
+
+set_target_properties(bench PROPERTIES
+    IMPORTED_LOCATION_RELEASE "${benchmark_BINARY_DIR}/src/libbenchmark.a"
+    IMPORTED_LOCATION_DEBUG "${benchmark_BINARY_DIR}/src/libbenchmark.a"
+)
