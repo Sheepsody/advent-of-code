@@ -13,6 +13,7 @@
 #include "days/day10.cpp"
 #include "days/day11.cpp"
 #include "days/day12.cpp"
+#include "days/day13.cpp"
 
 #define BENCHMARK_FUNCTION(name, day, part)                                    \
   static void name(benchmark::State &state) {                                  \
@@ -59,5 +60,8 @@ BENCHMARK_FUNCTION(DAY_11_PART_2, 11, part_two)
 
 BENCHMARK_FUNCTION(DAY_12_PART_1, 12, part_one)
 BENCHMARK_FUNCTION(DAY_12_PART_2, 12, part_two)
+
+BENCHMARK_FUNCTION(DAY_13_PART_1, 13, part_one)
+BENCHMARK_FUNCTION(DAY_13_PART_2, 13, part_two)
 
 BENCHMARK_MAIN();

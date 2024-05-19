@@ -14,6 +14,7 @@
 #include "days/day10.cpp"
 #include "days/day11.cpp"
 #include "days/day12.cpp"
+#include "days/day13.cpp"
 
 #define HANDLE_DAY(dayNumber, DayClass)                                        \
   if (day == dayNumber) {                                                      \
@@ -65,6 +66,7 @@ int main(int argc, char **argv) {
   HANDLE_DAY(10, Day10)
   HANDLE_DAY(11, Day11)
   HANDLE_DAY(12, Day12)
+  HANDLE_DAY(13, Day13)
 
   return 0;
 }
