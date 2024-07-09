@@ -11,9 +11,8 @@
 #include <unordered_set>
 #include <utility>
 
-using namespace std;
-
 namespace Day13 {
+using namespace std;
 
 using Input = vector<vector<vector<int>>>;
 
@@ -102,13 +101,13 @@ Input parse(const string_view &content) {
   return list_matrix;
 }
 
-int part_one(const Input& list_matrix ){
+int part_one(const Input &list_matrix) {
   return accumulate(list_matrix.begin(), list_matrix.end(), 0,
-             [](int acc, auto m) { return acc + getScore(m, 0); });
+                    [](int acc, auto m) { return acc + getScore(m, 0); });
 }
 
-int part_two(const Input& list_matrix) {
+int part_two(const Input &list_matrix) {
   return accumulate(list_matrix.begin(), list_matrix.end(), 0,
-             [](int acc, auto m) { return acc + getScore(m, 1); });
+                    [](int acc, auto m) { return acc + getScore(m, 1); });
 }
 } // namespace Day13

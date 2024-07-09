@@ -5,13 +5,16 @@
 #include <fstream>
 #include <iostream>
 #include <numeric>
+#include <ranges>
 #include <sstream>
 #include <tuple>
 #include <unordered_set>
 #include <utility>
 
+namespace Day14 {
 using namespace std;
-constexpr auto max_discard = numeric_limits<streamsize>::max();
+
+using Grid = vector<vector<char>>;
 
 enum class Direction { NORTH, SOUTH, EAST, WEST };
 const Direction DIRECTIONS[4] = {Direction::NORTH, Direction::WEST,
@@ -122,38 +125,31 @@ int getLoad(const vector<vector<char>> &grid) {
   return load;
 }
 
-int main(int argc, char **argv) {
-  if (argc != 2) {
-    cout << "Missing argument" << endl;
-    throw;
+Grid parse(const string_view &content) {
+  Grid grid;
+  for (auto line : content | std::views::split('\n') |
+                       std::views::filter([](auto x) { return !x.empty(); })) {
+    grid.push_back(vector<char>(line.begin(), line.end()));
   }
+  return grid;
+}
 
-  ifstream inputFile(argv[1]);
+int part_one(const Grid &grid) {
+  Grid nGrid = grid;
+  tiltGrid(nGrid, Direction::NORTH);
+  return getLoad(grid);
+}
 
-  // Check if the file is open
-  if (!inputFile.is_open()) {
-    cerr << "Error opening the file!" << endl;
-    return 1; // Return an error code
-  }
+int part_two(const Grid &cgrid) {
 
-  // Parsing
-  vector<vector<char>> grid;
-  for (string line; getline(inputFile, line);)
-    if (!line.empty())
-      grid.push_back(vector<char>(line.begin(), line.end()));
+  Grid grid = cgrid;
 
-  // Part a : tilt
-  tiltGrid(grid, Direction::NORTH);
-  cout << "Part a: " << getLoad(grid) << endl;
-  tiltGrid(grid, Direction::SOUTH); // Reset
-
-  // Part b : 1e9 cycles
-  // Find cycle
   int loadIndex;
   vector<int> cycleLoads;
   unordered_map<size_t, int> cycleIndexes;
 
   for (int ncycle = 0; ncycle < 1E9; ncycle++) {
+
     // One cycle
     for (int i = 0; i < 4; i++)
       tiltGrid(grid, DIRECTIONS[i % 4]);
@@ -174,10 +170,6 @@ int main(int argc, char **argv) {
     cycleLoads.push_back(load);
   }
 
-  cout << "Part b: " << cycleLoads[loadIndex] << endl;
-
-  // Close file
-  inputFile.close();
-
-  return 0;
+  return cycleLoads[loadIndex];
 }
+} // namespace Day14

@@ -15,6 +15,11 @@
 #include "days/day11.cpp"
 #include "days/day12.cpp"
 #include "days/day13.cpp"
+#include "days/day14.cpp"
+#include "days/day15.cpp"
+#include "days/day16.cpp"
+#include "days/day17.cpp"
+#include "days/day18.cpp"
 
 #define HANDLE_DAY(dayNumber, DayClass)                                        \
   if (day == dayNumber) {                                                      \
@@ -40,8 +45,8 @@ std::string readFileToString(const std::string &filename) {
 }
 
 int main(int argc, char **argv) {
-  if (argc != 2) {
-    std::cerr << "Usage: " << argv[0] << " day_number" << std::endl;
+  if (argc != 3) {
+    std::cerr << "Usage: " << argv[0] << " day_number input_file" << std::endl;
     return 1;
   }
 
@@ -49,8 +54,7 @@ int main(int argc, char **argv) {
 
   // Needs to be formatted ith leading 0
   std::stringstream ssfilename;
-  ssfilename << "data/day-" << std::setw(2) << std::setfill('0') << day
-             << ".txt";
+  ssfilename << "data/" << argv[2];
   std::string filename = ssfilename.str();
   auto content = readFileToString(filename);
 
@@ -67,6 +71,12 @@ int main(int argc, char **argv) {
   HANDLE_DAY(11, Day11)
   HANDLE_DAY(12, Day12)
   HANDLE_DAY(13, Day13)
+  HANDLE_DAY(14, Day14)
+  HANDLE_DAY(15, Day15)
+  HANDLE_DAY(16, Day16)
+  HANDLE_DAY(17, Day17)
+  HANDLE_DAY(18, Day18)
 
+  cout << "Could not find day: " << argv[1] << endl;
   return 0;
 }

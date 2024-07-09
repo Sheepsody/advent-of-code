@@ -5,12 +5,13 @@
 #include <fstream>
 #include <iostream>
 #include <numeric>
+#include <ranges>
 #include <sstream>
 #include <unordered_set>
 #include <utility>
 
+namespace Day18 {
 using namespace std;
-constexpr auto max_discard = numeric_limits<streamsize>::max();
 
 // FIXME Faster then dict ?
 pair<int, int> getDirection(char c) {
@@ -73,33 +74,24 @@ char getD(char c) {
   }
 }
 
-int main(int argc, char **argv) {
-  if (argc != 2) {
-    cout << "Missing argument" << endl;
-    throw;
-  }
+using Plan = vector<tuple<char, int, string>>;
 
-  ifstream inputFile(argv[1]);
-
-  // Check if the file is open
-  if (!inputFile.is_open()) {
-    cerr << "Error opening the file!" << endl;
-    return 1; // Return an error code
-  }
-
-  // Parse lines
-  int pos;
+Plan parse(const string_view &content) {
   vector<tuple<char, int, string>> plan;
-  for (string line; getline(inputFile, line);)
-    if (!line.empty())
-      if ((pos = line.find(' ', 2)) != string::npos)
-        plan.push_back(
-            {line[0], stoi(line.substr(2, pos - 2)), line.substr(pos + 3, 6)});
+  for (auto line : content | std::views::split('\n') |
+                       std::views::filter([](auto x) { return !x.empty(); })) {
+    string_view sv(line.begin(), line.end());
+    size_t pos = sv.find(' ', 2);
+    if (pos != string_view::npos)
+      plan.push_back({sv[0], stoi(string(sv.substr(2, pos - 2))),
+                      string(sv.substr(pos + 3, 6))});
+  }
+  return plan;
+}
 
-  // Part a
-  cout << "Part a: " << getNbPoints(plan) << endl;
+long part_one(const Plan &plan) { return getNbPoints(plan); }
 
-  // Part b
+long part_two(const Plan &plan) {
   vector<tuple<char, int, string>> swapPlan;
   for (const auto &step : plan) {
     string s = get<2>(step);
@@ -107,10 +99,6 @@ int main(int argc, char **argv) {
     int c = stoi(s.substr(0, 5), nullptr, 16);
     swapPlan.push_back({d, c, ""});
   }
-  cout << "Part b: " << getNbPoints(swapPlan) << endl;
-
-  // Close file
-  inputFile.close();
-
-  return 0;
+  return getNbPoints(swapPlan);
 }
+} // namespace Day18

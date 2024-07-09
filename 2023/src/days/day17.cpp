@@ -6,14 +6,15 @@
 #include <iostream>
 #include <numeric>
 #include <queue>
+#include <ranges>
 #include <sstream>
 #include <tuple>
 #include <unordered_set>
 #include <utility>
 #include <vector>
 
+namespace Day17 {
 using namespace std;
-constexpr auto max_discard = numeric_limits<streamsize>::max();
 
 enum class Direction { NORTH, SOUTH, EAST, WEST };
 
@@ -91,35 +92,23 @@ int getMinLength(const vector<vector<int>> &grid,
   return -1;
 }
 
-int main(int argc, char **argv) {
-  if (argc != 2) {
-    cout << "Missing argument" << endl;
-    throw;
-  }
-
-  ifstream inputFile(argv[1]);
-
-  // Check if the file is open
-  if (!inputFile.is_open()) {
-    cerr << "Error opening the file!" << endl;
-    return 1; // Return an error code
-  }
-
-  // Parsing
+vector<vector<int>> parse(const string_view &content) {
   vector<vector<int>> grid;
-  for (string line; getline(inputFile, line);)
-    if (!line.empty()) {
-      vector<int> parsedLine;
-      transform(line.begin(), line.end(), back_inserter(parsedLine),
-                [](char c) { return c - '0'; });
-      grid.push_back(std::move(parsedLine));
-    };
-
-  cout << "Part a: " << getMinLength(grid, -1, 3) << endl;
-  cout << "Part b: " << getMinLength(grid, 4, 10) << endl;
-
-  // Close file
-  inputFile.close();
-
-  return 0;
+  for (auto line : content | std::views::split('\n') |
+                       std::views::filter([](auto x) { return !x.empty(); })) {
+    vector<int> parsedLine;
+    transform(line.begin(), line.end(), back_inserter(parsedLine),
+              [](char c) { return c - '0'; });
+    grid.push_back(std::move(parsedLine));
+  };
+  return grid;
 }
+
+int part_one(const vector<vector<int>> &grid) {
+  return getMinLength(grid, -1, 3);
+}
+
+int part_two(const vector<vector<int>> &grid) {
+  return getMinLength(grid, 4, 10);
+}
+} // namespace Day17

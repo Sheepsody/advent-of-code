@@ -6,14 +6,15 @@
 #include <iostream>
 #include <numeric>
 #include <optional>
+#include <ranges>
 #include <sstream>
 #include <tuple>
 #include <unordered_set>
 #include <utility>
 #include <vector>
 
+namespace Day15 {
 using namespace std;
-constexpr auto max_discard = numeric_limits<streamsize>::max();
 
 int getCharCode(char c, int n) { return ((n + (c - '\0')) * 17) % 256; }
 
@@ -37,34 +38,23 @@ void ltrim(string &s) {
   s.erase(it, s.end());
 }
 
-int main(int argc, char **argv) {
-  if (argc != 2) {
-    cout << "Missing argument" << endl;
-    throw;
-  }
-
-  ifstream inputFile(argv[1]);
-
-  // Check if the file is open
-  if (!inputFile.is_open()) {
-    cerr << "Error opening the file!" << endl;
-    return 1; // Return an error code
-  }
-
-  // Parse
+vector<string> parse(const string_view &content) {
   vector<string> codes;
-  for (string line; getline(inputFile, line, ',');) {
+  for (auto vline : content | std::views::split(',') |
+                        std::views::filter([](auto x) { return !x.empty(); })) {
+    string line = string(vline.begin(), vline.end());
     ltrim(line);
-    if (!line.empty())
-      codes.push_back(line);
+    codes.push_back(line);
   }
+  return codes;
+}
 
-  // Step a: encode all lines
-  cout << "Step a: "
-       << accumulate(codes.begin(), codes.end(), 0,
-                     [](int acc, string s) { return acc + getStringCode(s); })
-       << endl;
+int part_one(const vector<string> &codes) {
+  return accumulate(codes.begin(), codes.end(), 0,
+                    [](int acc, string s) { return acc + getStringCode(s); });
+}
 
+int part_two(const vector<string> &codes) {
   // Lines to operations
   vector<Step> steps;
   for (const auto &s : codes) {
@@ -114,10 +104,6 @@ int main(int argc, char **argv) {
     for (int i = 0; i < v.size(); i++)
       count += (k + 1) * (i + 1) * v[i].second;
 
-  cout << "Part b: " << count << endl;
-
-  // Close file
-  inputFile.close();
-
-  return 0;
+  return count;
 }
+} // namespace Day15
