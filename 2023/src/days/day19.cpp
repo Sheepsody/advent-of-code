@@ -13,8 +13,8 @@
 #include <unordered_set>
 #include <utility>
 
+namespace Day19 {
 using namespace std;
-constexpr auto max_discard = numeric_limits<streamsize>::max();
 
 struct Rules {
   char var;
@@ -220,40 +220,26 @@ long long getAllComb(const unordered_map<string, Workflow> &workflows) {
   return count;
 }
 
-int main(int argc, char **argv) {
-  if (argc != 2) {
-    cout << "Missing argument" << endl;
-    throw;
-  }
+auto parse(const string_view &content) {
+  return string(content.begin(), content.end());
+}
 
-  ifstream inputFile(argv[1]);
+long long part_one(const string &content) {
+  auto workflows = getWorkflows(content.substr(0, content.find("\n\n")));
+  auto inputs = getInputs(content.substr(content.find("\n\n")));
 
-  // Check if the file is open
-  if (!inputFile.is_open()) {
-    cerr << "Error opening the file!" << endl;
-    return 1; // Return an error code
-  }
-
-  std::stringstream buffer;
-  buffer << inputFile.rdbuf();
-  string filecontent = buffer.str();
-
-  auto workflows =
-      getWorkflows(filecontent.substr(0, filecontent.find("\n\n")));
-  auto inputs = getInputs(filecontent.substr(filecontent.find("\n\n")));
-
-  // Part a
   long long count = 0;
   for (auto &i : inputs)
     if (execute(i, workflows) == 'A')
       count += i.x + i.m + i.a + i.s;
-  cout << "Part a: " << count << endl;
 
-  // Part b
-  cout << "Part b: " << getAllComb(workflows) << endl;
-
-  // Close file
-  inputFile.close();
-
-  return 0;
+  return count;
 }
+
+long long part_two(const string &content) {
+  auto workflows = getWorkflows(content.substr(0, content.find("\n\n")));
+  auto inputs = getInputs(content.substr(content.find("\n\n")));
+
+  return getAllComb(workflows);
+}
+} // namespace Day19

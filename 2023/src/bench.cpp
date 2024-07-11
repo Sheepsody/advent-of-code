@@ -18,6 +18,9 @@
 #include "days/day15.cpp"
 #include "days/day16.cpp"
 #include "days/day17.cpp"
+#include "days/day18.cpp"
+#include "days/day19.cpp"
+#include "days/day20.cpp"
 
 #define BENCHMARK_FUNCTION(name, day, part)                                    \
   static void name(benchmark::State &state) {                                  \
@@ -27,7 +30,7 @@
       Day##day::part(parsed);                                                  \
     }                                                                          \
   }                                                                            \
-  BENCHMARK(name);
+  BENCHMARK(name)->Unit(benchmark::kMillisecond);
 
 BENCHMARK_FUNCTION(DAY_01_PART_1, 01, part_one)
 BENCHMARK_FUNCTION(DAY_01_PART_2, 01, part_two)
@@ -79,5 +82,14 @@ BENCHMARK_FUNCTION(DAY_16_PART_2, 16, part_two)
 
 BENCHMARK_FUNCTION(DAY_17_PART_1, 17, part_one)
 BENCHMARK_FUNCTION(DAY_17_PART_2, 17, part_two)
+
+BENCHMARK_FUNCTION(DAY_18_PART_1, 18, part_one)
+BENCHMARK_FUNCTION(DAY_18_PART_2, 18, part_two)
+
+BENCHMARK_FUNCTION(DAY_19_PART_1, 19, part_one)
+BENCHMARK_FUNCTION(DAY_19_PART_2, 19, part_two)
+
+BENCHMARK_FUNCTION(DAY_20_PART_1, 20, part_one)
+BENCHMARK_FUNCTION(DAY_20_PART_2, 20, part_two)
 
 BENCHMARK_MAIN();

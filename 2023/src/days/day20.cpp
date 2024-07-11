@@ -7,14 +7,15 @@
 #include <iterator>
 #include <numeric>
 #include <queue>
+#include <ranges>
 #include <regex>
 #include <sstream>
 #include <string>
 #include <unordered_set>
 #include <utility>
 
+namespace Day20 {
 using namespace std;
-constexpr auto max_discard = numeric_limits<streamsize>::max();
 
 struct Pulse {
   string src;
@@ -123,47 +124,47 @@ struct Conjunction : public Module {
   }
 };
 
-Modules parse(ifstream &input) {
+Modules fromString(const string_view &content) {
   // Use smart pointers
   unordered_map<string, unique_ptr<Module>> modules;
 
-  for (string line; std::getline(input, line);)
-    if (!line.empty()) {
-      istringstream stream(line);
-      string moduleInfo, arrow;
-      vector<string> dests;
+  for (auto line : content | std::views::split('\n') |
+                       std::views::filter([](auto x) { return !x.empty(); })) {
+    istringstream stream(string(line.begin(), line.end()));
+    string moduleInfo, arrow;
+    vector<string> dests;
 
-      stream >> moduleInfo >> arrow;
+    stream >> moduleInfo >> arrow;
 
-      for (string dest; std::getline(stream, dest, ',');) {
-        // Remove spaces
-        dest.erase(remove_if(dest.begin(), dest.end(),
-                             [](auto &&c) { return isspace(c); }),
-                   dest.end());
-        if (!dest.empty())
-          dests.push_back(dest);
-      }
-
-      unique_ptr<Module> mod;
-      switch (moduleInfo[0]) {
-      case '%':
-        mod = make_unique<FlipFlop>();
-        break;
-      case '&':
-        mod = make_unique<Conjunction>();
-        break;
-      default:
-        mod = make_unique<Broadcaster>();
-      }
-
-      string src = moduleInfo.substr(
-          moduleInfo[0] == '%' || moduleInfo[0] == '&' ? 1 : 0);
-
-      mod->dests = std::move(dests);
-      mod->src = src;
-
-      modules[src] = std::move(mod);
+    for (string dest; std::getline(stream, dest, ',');) {
+      // Remove spaces
+      dest.erase(remove_if(dest.begin(), dest.end(),
+                           [](auto &&c) { return isspace(c); }),
+                 dest.end());
+      if (!dest.empty())
+        dests.push_back(dest);
     }
+
+    unique_ptr<Module> mod;
+    switch (moduleInfo[0]) {
+    case '%':
+      mod = make_unique<FlipFlop>();
+      break;
+    case '&':
+      mod = make_unique<Conjunction>();
+      break;
+    default:
+      mod = make_unique<Broadcaster>();
+    }
+
+    string src =
+        moduleInfo.substr(moduleInfo[0] == '%' || moduleInfo[0] == '&' ? 1 : 0);
+
+    mod->dests = std::move(dests);
+    mod->src = src;
+
+    modules[src] = std::move(mod);
+  }
 
   // Set conjunction modules
   // FIXME Dirty but inexpensive
@@ -205,8 +206,10 @@ pair<long, long> executeSequence(Modules &modules) {
   return {pulses.countLow, pulses.countHigh};
 }
 
-long partA(ifstream &inputFile) {
-  auto modules = parse(inputFile);
+auto parse(const string_view &content) { return content; }
+
+auto part_one(const string_view &content) {
+  auto modules = fromString(content);
 
   long low = 0, high = 0;
   for (int i = 0; i < 1000; i++) {
@@ -231,8 +234,8 @@ long partA(ifstream &inputFile) {
 ** &mm -> nr
 ** &nr -> rx
 */
-long partB(ifstream &inputFile) {
-  auto modules = parse(inputFile);
+auto part_two(const string_view &content) {
+  auto modules = fromString(content);
 
   // Print inputs to conjunction
   auto d = dynamic_cast<Conjunction *>(modules["nr"].get())->mem;
@@ -266,32 +269,4 @@ long partB(ifstream &inputFile) {
 
   return r;
 }
-
-int main(int argc, char **argv) {
-  if (argc != 2) {
-    cout << "Missing argument" << endl;
-    throw;
-  }
-
-  ifstream inputFile(argv[1]);
-
-  // Check if the file is open
-  if (!inputFile.is_open()) {
-    cerr << "Error opening the file!" << endl;
-    return 1; // Return an error code
-  }
-
-  // Part a
-  cout << "Part a: " << partA(inputFile) << endl;
-
-  inputFile.clear(); // Clear any error flags
-  inputFile.seekg(
-      0, std::ios::beg); // Move the position to the beginning of the file
-
-  cout << "Part a: " << partB(inputFile) << endl;
-
-  // Close file
-  inputFile.close();
-
-  return 0;
-}
+} // namespace Day20
