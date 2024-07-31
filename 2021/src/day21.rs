@@ -71,8 +71,8 @@ fn get_wins_per_step(start: u8) -> Vec<u64> {
 #[aoc(day21, part2)]
 fn part2(&(a, b): &(usize, usize)) -> u64 {
     // TODO Doc
-    let mut wins_a = get_wins_per_step(a as u8);
-    let mut wins_b = get_wins_per_step(b as u8);
+    let wins_a = get_wins_per_step(a as u8);
+    let wins_b = get_wins_per_step(b as u8);
 
     let (_, ca, _, cb) = wins_a.iter().zip(wins_b.iter()).fold(
         (1, 0, 1, 0),
