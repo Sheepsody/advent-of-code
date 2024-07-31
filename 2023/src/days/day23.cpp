@@ -5,12 +5,34 @@
 #include <fstream>
 #include <iostream>
 #include <numeric>
+#include <ranges>
 #include <sstream>
 #include <unordered_set>
 #include <utility>
 
+namespace std {
+struct Point23 {
+  int x;
+  int y;
+
+  bool operator==(const Point23 &other) const {
+    return x == other.x && y == other.y;
+  }
+};
+
+template <> struct hash<Point23> {
+  std::size_t operator()(const Point23 &p) const {
+
+    std::size_t h1 = std::hash<int>{}(p.x);
+    std::size_t h2 = std::hash<int>{}(p.y);
+
+    return h1 ^ (h2 << 1);
+  }
+};
+}
+
+namespace Day23 {
 using namespace std;
-constexpr auto max_discard = numeric_limits<streamsize>::max();
 
 using Grid = vector<vector<char>>;
 
@@ -33,28 +55,9 @@ static const vector<tuple<char, int, int>> SLIDES = {
     {'<', 0, -1}, // Left
 };
 
-struct Point {
-  int x;
-  int y;
-
-  bool operator==(const Point &other) const {
-    return x == other.x && y == other.y;
-  }
-};
-
-template <> struct hash<Point> {
-  std::size_t operator()(const Point &p) const {
-
-    std::size_t h1 = std::hash<int>{}(p.x);
-    std::size_t h2 = std::hash<int>{}(p.y);
-
-    return h1 ^ (h2 << 1);
-  }
-};
-
 // Depth-first search
 // Take into account the slides
-int dfsPartA(const Grid &grid, unordered_set<Point> &visited, Point p) {
+int dfsPartA(const Grid &grid, unordered_set<Point23> &visited, Point23 p) {
   int height = grid.size(), width = grid[0].size();
 
   // Termination condition
@@ -66,7 +69,7 @@ int dfsPartA(const Grid &grid, unordered_set<Point> &visited, Point p) {
   auto it = find_if(SLIDES.begin(), SLIDES.end(),
                     [c](auto &s) { return get<0>(s) == c; });
   if (it != SLIDES.end()) {
-    Point newP = {p.x + get<1>(*it), p.y + get<2>(*it)};
+    Point23 newP = {p.x + get<1>(*it), p.y + get<2>(*it)};
     visited.insert(newP);
     int result = dfsPartA(grid, visited, newP);
     visited.erase(newP);
@@ -76,7 +79,7 @@ int dfsPartA(const Grid &grid, unordered_set<Point> &visited, Point p) {
   // Advance
   int result = -1;
   for (auto &[i, j, a] : DIRECTIONS) {
-    Point newP{p.x + i, p.y + j};
+    Point23 newP{p.x + i, p.y + j};
     if (newP.x < 0 || newP.y < 0 || newP.x >= height || newP.y >= width ||
         grid[newP.x][newP.y] == '#')
       continue;
@@ -127,36 +130,25 @@ int dfsPartB(const BitSet &grid, BitSet &visited, int x, int y, int height,
   return result;
 }
 
-int main(int argc, char **argv) {
-  if (argc != 2) {
-    cout << "Missing argument" << endl;
-    throw;
-  }
+Grid parse(const string_view &content) {
 
-  ifstream inputFile(argv[1]);
-
-  // Check if the file is open
-  if (!inputFile.is_open()) {
-    cerr << "Error opening the file!" << endl;
-    return 1; // Return an error code
-  }
-
-  // Parse lines
   Grid grid;
-  for (string line; getline(inputFile, line);)
-    if (!line.empty()) {
-      vector<char> row;
-      row.reserve(line.size());
-      row.insert(row.end(), line.begin(), line.end());
-      grid.push_back(std::move(row));
-    }
+  for (auto line : content | std::views::split('\n') |
+                       std::views::filter([](auto x) { return !x.empty(); })) {
+    vector<char> row;
+    row.reserve(line.size());
+    row.insert(row.end(), line.begin(), line.end());
+    grid.push_back(std::move(row));
+  }
+  return grid;
+}
 
-  // DFS
-  unordered_set<Point> visited{{0, 1}};
-  cout << "Part a: " << dfsPartA(grid, visited, {0, 1}) << endl;
+auto part_one(const Grid &grid) {
+  unordered_set<Point23> visited{{0, 1}};
+  return dfsPartA(grid, visited, {0, 1});
+}
 
-  // Optimization
-  // Build vectors of bools that are smaller
+auto part_two(const Grid &grid) {
   BitSet bitGrid;
   BitSet bitVisited;
   int height = grid.size(), width = grid[0].size();
@@ -165,11 +157,6 @@ int main(int argc, char **argv) {
       if (grid[i][j] == '#')
         bitGrid.set(getIndex(i, j, width));
 
-  cout << "Part b: " << dfsPartB(bitGrid, bitVisited, 0, 1, height, width, 0)
-       << endl;
-
-  // Close file
-  inputFile.close();
-
-  return 0;
+  return dfsPartB(bitGrid, bitVisited, 0, 1, height, width, 0);
 }
+} // namespace Day23

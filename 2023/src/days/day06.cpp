@@ -54,33 +54,32 @@ double parse_line_b(const string &line) {
   return result;
 }
 
-Input parse(string_view content) {
+vector<string> parse(const string_view &content) {
   vector<string> lines;
   for (auto line : content | std::views::split('\n'))
     lines.push_back(string(line.begin(), line.end()));
 
-  return {
-      parse_line(lines[0]),
-      parse_line(lines[1]),
-      {parse_line_b(lines[0]), parse_line_b(lines[1])},
-  };
+  return lines;
 }
 
-double part_one(const Input &parsed) {
+double part_one(const vector<string> &lines) {
+  auto a = parse_line(lines[0]);
+  auto b = parse_line(lines[1]);
+
   double result = 1;
-  int length = min(parsed[0].size(), parsed[1].size());
+  int length = min(a.size(), b.size());
   for (int i = 0; i < length; i++) {
-    auto roots = get_roots(parsed[0][i], parsed[1][i]);
+    auto roots = get_roots(a[i], b[i]);
     result *= roots.second - roots.first + 1;
   }
   return (int)result;
 }
 
-double part_two(const Input &parsed) {
-  double duration = parsed[2][0];
-  double record = parsed[2][1];
+double part_two(const vector<string> &lines) {
+  auto duration = parse_line_b(lines[0]);
+  auto record = parse_line_b(lines[1]);
+
   auto roots = get_roots(duration, record);
   return (int)round(roots.second - roots.first + 1);
 }
-
 } // namespace Day06

@@ -22,6 +22,11 @@
 #include "days/day18.cpp"
 #include "days/day19.cpp"
 #include "days/day20.cpp"
+#include "days/day21.cpp"
+#include "days/day22.cpp"
+#include "days/day23.cpp"
+#include "days/day24.cpp"
+#include "days/day25.cpp"
 
 #define HANDLE_DAY(dayNumber, DayClass)                                        \
   if (day == dayNumber) {                                                      \
@@ -80,6 +85,11 @@ int main(int argc, char **argv) {
   HANDLE_DAY(18, Day18)
   HANDLE_DAY(19, Day19)
   HANDLE_DAY(20, Day20)
+  HANDLE_DAY(21, Day21)
+  HANDLE_DAY(22, Day22)
+  HANDLE_DAY(23, Day23)
+  HANDLE_DAY(24, Day24)
+  HANDLE_DAY(25, Day25)
 
   cout << "Could not find day: " << argv[1] << endl;
   return 0;

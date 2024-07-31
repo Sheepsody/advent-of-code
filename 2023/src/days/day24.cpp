@@ -9,14 +9,15 @@
 #include <numeric>
 #include <optional>
 #include <queue>
+#include <ranges>
 #include <regex>
 #include <sstream>
 #include <string>
 #include <unordered_set>
 #include <utility>
 
+namespace Day24 {
 using namespace std;
-constexpr auto max_discard = numeric_limits<streamsize>::max();
 
 struct Hail {
   double px, py, pz;
@@ -30,18 +31,36 @@ struct Intersection {
 
 using Matrix = vector<vector<double>>;
 
+struct Input {
+  long pMin;
+  long pMax;
+  vector<Hail> hails;
+};
+
 /*
  * Parse input with regex
  * Input in the form : 19, 13, 30 @ -2,  1, -2
  */
-vector<Hail> parse(basic_ifstream<char> &stream) {
+Input parse(const string_view &content) {
   vector<Hail> hails;
   std::regex pattern(
       "([-]*\\d+),\\s+([-]*\\d+),\\s+([-]*\\d+)\\s+@\\s+([-]*\\d+),\\s+"
       "([-]*\\d+),\\s+([-]*\\d+)");
   std::smatch matches;
 
-  for (string line; getline(stream, line);) {
+  long pMin, pMax;
+  bool firstLine = true;
+  for (auto sline : content | std::views::split('\n') |
+                        std::views::filter([](auto x) { return !x.empty(); })) {
+
+    if (firstLine) {
+      std::stringstream lineStream(string(sline.begin(), sline.end()));
+      lineStream >> pMin >> pMax;
+      firstLine = false;
+      continue;
+    }
+
+    string line(sline.begin(), sline.end());
     if (std::regex_search(line, matches, pattern)) {
       vector<double> coords;
       transform(matches.begin() + 1, matches.end(), back_inserter(coords),
@@ -58,13 +77,7 @@ vector<Hail> parse(basic_ifstream<char> &stream) {
     }
   };
 
-  return hails;
-}
-
-pair<long, long> getLims(basic_ifstream<char> &stream) {
-  long pMin, pMax;
-  stream >> pMin >> pMax;
-  return {pMin, pMax};
+  return {pMin, pMax, std::move(hails)};
 }
 
 inline double getC(const Hail &h) { return h.px * h.vy - h.py * h.vx; }
@@ -204,26 +217,12 @@ double timeToReach(const Hail &a, const Intersection &i) {
   return (i.x - a.px) / a.vx;
 }
 
-int main(int argc, char **argv) {
-  if (argc != 2) {
-    cout << "Missing argument file" << endl;
-    throw;
-  }
-
-  ifstream inputFile(argv[1]);
-
-  // Check if the file is open
-  if (!inputFile.is_open()) {
-    cerr << "Error opening the file!" << endl;
-    return 1; // Return an error code
-  }
+auto part_one(const Input &input) {
+  auto pMin = input.pMin;
+  auto pMax = input.pMax;
+  auto hails = input.hails;
 
   // Get limits
-  auto [pMin, pMax] = getLims(inputFile);
-
-  // Parse input
-  auto hails = parse(inputFile);
-
   int count = 0;
 
   // Create graph
@@ -247,15 +246,13 @@ int main(int argc, char **argv) {
       count++;
     }
 
-  cout << "Part a: " << count << endl;
+  return count;
+}
 
-  auto r = getRock(hails).value();
+auto part_two(const Input &input) {
+  auto r = getRock(input.hails).value();
 
   // Had issue with precision => rounded up...
-  cout << "Part b: " << (long)roundl(r.px + r.py + r.pz) << endl;
-
-  // Close file
-  inputFile.close();
-
-  return 0;
+  return (long)ceil(r.px + r.py + r.pz);
 }
+} // namespace Day24

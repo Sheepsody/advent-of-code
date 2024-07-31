@@ -6,6 +6,8 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_COMPILER "/opt/homebrew/opt/llvm@16/bin/clang++")
 
 # Set compiler flags
+message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
+
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -Wall -Wextra")
 set(CMAKE_CXX_FLAGS_DEBUG "-g -Wall -Wextra")
 if(NOT CMAKE_BUILD_TYPE)
@@ -33,9 +35,4 @@ SET(SOURCES
 add_executable(aoc ${SOURCES})
 
 add_executable(bench src/bench.cpp)
-target_link_libraries(bench benchmark::benchmark)
-
-set_target_properties(bench PROPERTIES
-    IMPORTED_LOCATION_RELEASE "${benchmark_BINARY_DIR}/src/libbenchmark.a"
-    IMPORTED_LOCATION_DEBUG "${benchmark_BINARY_DIR}/src/libbenchmark.a"
-)
+target_link_libraries(bench PRIVATE benchmark::benchmark)
