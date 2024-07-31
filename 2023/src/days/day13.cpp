@@ -5,13 +5,16 @@
 #include <fstream>
 #include <iostream>
 #include <numeric>
+#include <ranges>
 #include <sstream>
 #include <tuple>
 #include <unordered_set>
 #include <utility>
 
+namespace Day13 {
 using namespace std;
-constexpr auto max_discard = numeric_limits<streamsize>::max();
+
+using Input = vector<vector<vector<int>>>;
 
 // Counts the number of ones (bit)
 int countOnes(int value) {
@@ -70,24 +73,11 @@ int getScore(const vector<vector<int>> &matrix, int nb_smudge) {
   return result;
 }
 
-int main(int argc, char **argv) {
-  if (argc != 2) {
-    cout << "Missing argument" << endl;
-    throw;
-  }
-
-  ifstream inputFile(argv[1]);
-
-  // Check if the file is open
-  if (!inputFile.is_open()) {
-    cerr << "Error opening the file!" << endl;
-    return 1; // Return an error code
-  }
-
-  // Parsing
+Input parse(const string_view &content) {
   vector<vector<vector<int>>> list_matrix;
   vector<vector<int>> matrix;
-  for (string line; getline(inputFile, line);) {
+  for (auto s : content | std::views::split('\n')) {
+    auto line = string(string(s.begin(), s.end()));
     if (line.size() > 0) {
       // Parse rows of new matrix
       vector<int> row;
@@ -108,20 +98,16 @@ int main(int argc, char **argv) {
   if (matrix.size() > 0)
     list_matrix.push_back(matrix);
 
-  // Output solution
-  cout << "Part a: "
-       << accumulate(list_matrix.begin(), list_matrix.end(), 0,
-                     [](int acc, auto m) { return acc + getScore(m, 0); })
-       << endl;
-
-  // Output solution
-  cout << "Part b: "
-       << accumulate(list_matrix.begin(), list_matrix.end(), 0,
-                     [](int acc, auto m) { return acc + getScore(m, 1); })
-       << endl;
-
-  // Close file
-  inputFile.close();
-
-  return 0;
+  return list_matrix;
 }
+
+int part_one(const Input &list_matrix) {
+  return accumulate(list_matrix.begin(), list_matrix.end(), 0,
+                    [](int acc, auto m) { return acc + getScore(m, 0); });
+}
+
+int part_two(const Input &list_matrix) {
+  return accumulate(list_matrix.begin(), list_matrix.end(), 0,
+                    [](int acc, auto m) { return acc + getScore(m, 1); });
+}
+} // namespace Day13

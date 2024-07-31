@@ -6,31 +6,29 @@
 #include <iostream>
 #include <numeric>
 #include <queue>
+#include <ranges>
 #include <sstream>
 #include <tuple>
 #include <unordered_set>
 #include <utility>
 
-using namespace std;
-constexpr auto max_discard = numeric_limits<streamsize>::max();
-
+namespace std {
 enum class Direction { NORTH, SOUTH, EAST, WEST };
-const vector<Direction> directions{Direction::NORTH, Direction::SOUTH,
-                                   Direction::EAST, Direction::WEST};
 
-struct Point {
+// FIXME Issue Point ambuguity -> create common lib
+struct Point16 {
   int x;
   int y;
   Direction d;
 
-  friend bool operator==(const Point &lhs, const Point &rhs) {
+  friend bool operator==(const Point16 &lhs, const Point16 &rhs) {
     return lhs.x == rhs.x && lhs.y == rhs.y && rhs.d == lhs.d;
   }
 };
 
 // FIXME Version that works for all tuples
-template <> struct hash<Point> {
-  std::size_t operator()(const Point &p) const {
+template <> struct hash<Point16> {
+  std::size_t operator()(const Point16 &p) const {
 
     std::size_t h1 = std::hash<int>{}(p.x);
     std::size_t h2 = std::hash<int>{}(p.y);
@@ -39,6 +37,13 @@ template <> struct hash<Point> {
     return h1 ^ (h2 << 1) ^ (h3 << 2);
   }
 };
+} // namespace std
+
+namespace Day16 {
+using namespace std;
+
+const vector<Direction> directions{Direction::NORTH, Direction::SOUTH,
+                                   Direction::EAST, Direction::WEST};
 
 // Direction to increments
 const unordered_map<Direction, pair<int, int>> increments = {
@@ -83,10 +88,10 @@ std::vector<Direction> getDirections(char c, Direction old_dir) {
   return {old_dir};
 }
 
-int getEnergizedCount(Point initP, const vector<vector<char>> &grid) {
+int getEnergizedCount(Point16 initP, const vector<vector<char>> &grid) {
   int counter = 0;
-  queue<Point> beams;
-  unordered_set<Point> visited;
+  queue<Point16> beams;
+  unordered_set<Point16> visited;
   beams.push(initP);
 
   while (!beams.empty()) {
@@ -116,31 +121,22 @@ int getEnergizedCount(Point initP, const vector<vector<char>> &grid) {
   return counter;
 }
 
-int main(int argc, char **argv) {
-  if (argc != 2) {
-    cout << "Missing argument" << endl;
-    throw;
+using Grid = vector<vector<char>>;
+
+Grid parse(const string_view &content) {
+  Grid grid;
+  for (auto line : content | std::views::split('\n') |
+                       std::views::filter([](auto x) { return !x.empty(); })) {
+    grid.push_back(vector<char>(line.begin(), line.end()));
   }
+  return grid;
+}
 
-  ifstream inputFile(argv[1]);
+int part_one(const Grid &grid) {
+  return getEnergizedCount({0, 0, Direction::EAST}, grid);
+}
 
-  // Check if the file is open
-  if (!inputFile.is_open()) {
-    cerr << "Error opening the file!" << endl;
-    return 1; // Return an error code
-  }
-
-  // Parsing
-  vector<vector<char>> grid;
-  for (string line; getline(inputFile, line);)
-    if (!line.empty())
-      grid.push_back(vector<char>(line.begin(), line.end()));
-
-  // Part a
-  cout << "Part a: " << getEnergizedCount({0, 0, Direction::EAST}, grid)
-       << endl;
-
-  // Part b
+int part_two(const Grid &grid) {
   int maxCounter = 0;
   int height = grid.size(), width = grid[0].size();
   for (int i = 0; i < height; i++) {
@@ -157,11 +153,6 @@ int main(int argc, char **argv) {
         max(maxCounter,
             getEnergizedCount({0, width - i - 1, Direction::NORTH}, grid));
   }
-
-  cout << "Part b: " << maxCounter << endl;
-
-  // Close file
-  inputFile.close();
-
-  return 0;
+  return maxCounter;
 }
+} // namespace Day16

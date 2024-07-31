@@ -141,5 +141,6 @@ int part_one(vector<string> &lines) {
   return result;
 }
 
+// TODO
 int part_two(vector<string> &lines) { return 0; }
 } // namespace Day07

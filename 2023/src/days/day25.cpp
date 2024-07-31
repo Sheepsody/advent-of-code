@@ -8,14 +8,15 @@
 #include <numeric>
 #include <queue>
 #include <random>
+#include <ranges>
 #include <regex>
 #include <sstream>
 #include <string>
 #include <unordered_set>
 #include <utility>
 
+namespace Day25 {
 using namespace std;
-constexpr auto max_discard = numeric_limits<streamsize>::max();
 
 static default_random_engine engine(3);
 
@@ -104,57 +105,44 @@ int getVerticeIndex(unordered_map<string, int> &vertices, const string &s) {
   return vertices[s] = vertices.size();
 }
 
-int main(int argc, char **argv) {
-  if (argc != 2) {
-    cout << "Missing argument" << endl;
-    throw;
-  }
+using Input = pair<vector<pair<int, int>>, unordered_map<string, int>>;
 
-  ifstream inputFile(argv[1]);
-
-  // Check if the file is open
-  if (!inputFile.is_open()) {
-    cerr << "Error opening the file!" << endl;
-    return 1; // Return an error code
-  }
-
-  // Parse lines
+Input parse(const string_view &content) {
   std::regex pattern("(\\w+)");
   vector<pair<int, int>> edges;
   unordered_map<string, int> vertices;
 
-  for (string line; getline(inputFile, line);) {
-    if (!line.empty()) {
-      auto words_begin =
-          std::sregex_token_iterator(line.begin(), line.end(), pattern);
-      auto words_end = std::sregex_token_iterator();
+  for (auto line : content | std::views::split('\n') |
+                       std::views::filter([](auto x) { return !x.empty(); })) {
+    string sline(line.begin(), line.end());
+    auto words_begin =
+        std::sregex_token_iterator(sline.begin(), sline.end(), pattern);
+    auto words_end = std::sregex_token_iterator();
 
-      // Collect source
-      string source = *words_begin;
-      words_begin++;
+    // Collect source
+    string source = *words_begin;
+    words_begin++;
 
-      // Add edges
-      for (auto it = words_begin; it != words_end; ++it)
-        edges.push_back({getVerticeIndex(vertices, source),
-                         getVerticeIndex(vertices, *it)});
-    }
+    // Add edges
+    for (auto it = words_begin; it != words_end; ++it)
+      edges.push_back(
+          {getVerticeIndex(vertices, source), getVerticeIndex(vertices, *it)});
   }
 
+  return make_tuple(edges, vertices);
+}
+
+auto part_one(const Input &input) {
+  auto [edges, vertices] = input;
   int i;
   GraphCut cut{INT_MAX, UnionFind(0)};
   for (i = 0; cut.cutSize > 3; i++)
     cut = kraker(vertices.size(), edges);
 
-  cout << "Number iterations: " << i << endl;
   auto partitions = cut.getPartitions();
-  cout << "Part a: " << partitions.first.size() * partitions.second.size()
-       << endl;
 
-  // Part b : ok
-  cout << "Part a: " << 1 << endl;
-
-  // Close file
-  inputFile.close();
-
-  return 0;
+  return partitions.first.size() * partitions.second.size();
 }
+
+auto part_two(const Input &_) { return 0; }
+} // namespace Day25

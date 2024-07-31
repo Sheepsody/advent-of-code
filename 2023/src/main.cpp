@@ -12,6 +12,21 @@
 #include "days/day08.cpp"
 #include "days/day09.cpp"
 #include "days/day10.cpp"
+#include "days/day11.cpp"
+#include "days/day12.cpp"
+#include "days/day13.cpp"
+#include "days/day14.cpp"
+#include "days/day15.cpp"
+#include "days/day16.cpp"
+#include "days/day17.cpp"
+#include "days/day18.cpp"
+#include "days/day19.cpp"
+#include "days/day20.cpp"
+#include "days/day21.cpp"
+#include "days/day22.cpp"
+#include "days/day23.cpp"
+#include "days/day24.cpp"
+#include "days/day25.cpp"
 
 #define HANDLE_DAY(dayNumber, DayClass)                                        \
   if (day == dayNumber) {                                                      \
@@ -37,8 +52,8 @@ std::string readFileToString(const std::string &filename) {
 }
 
 int main(int argc, char **argv) {
-  if (argc != 2) {
-    std::cerr << "Usage: " << argv[0] << " day_number" << std::endl;
+  if (argc != 3) {
+    std::cerr << "Usage: " << argv[0] << " day_number input_file" << std::endl;
     return 1;
   }
 
@@ -46,8 +61,7 @@ int main(int argc, char **argv) {
 
   // Needs to be formatted ith leading 0
   std::stringstream ssfilename;
-  ssfilename << "data/day-" << std::setw(2) << std::setfill('0') << day
-             << ".txt";
+  ssfilename << "data/" << argv[2];
   std::string filename = ssfilename.str();
   auto content = readFileToString(filename);
 
@@ -61,6 +75,22 @@ int main(int argc, char **argv) {
   HANDLE_DAY(8, Day08)
   HANDLE_DAY(9, Day09)
   HANDLE_DAY(10, Day10)
+  HANDLE_DAY(11, Day11)
+  HANDLE_DAY(12, Day12)
+  HANDLE_DAY(13, Day13)
+  HANDLE_DAY(14, Day14)
+  HANDLE_DAY(15, Day15)
+  HANDLE_DAY(16, Day16)
+  HANDLE_DAY(17, Day17)
+  HANDLE_DAY(18, Day18)
+  HANDLE_DAY(19, Day19)
+  HANDLE_DAY(20, Day20)
+  HANDLE_DAY(21, Day21)
+  HANDLE_DAY(22, Day22)
+  HANDLE_DAY(23, Day23)
+  HANDLE_DAY(24, Day24)
+  HANDLE_DAY(25, Day25)
 
+  cout << "Could not find day: " << argv[1] << endl;
   return 0;
 }

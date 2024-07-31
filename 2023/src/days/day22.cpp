@@ -7,14 +7,15 @@
 #include <iterator>
 #include <numeric>
 #include <queue>
+#include <ranges>
 #include <regex>
 #include <sstream>
 #include <string>
 #include <unordered_set>
 #include <utility>
 
+namespace Day22 {
 using namespace std;
-constexpr auto max_discard = numeric_limits<streamsize>::max();
 
 using Tower = vector<vector<int>>;
 using Graph = unordered_map<int, vector<int>>;
@@ -25,14 +26,15 @@ struct Brick {
   int x2, y2, z2;
 };
 
-// Parse input
-vector<Brick> parse(basic_ifstream<char> &stream) {
+vector<Brick> parse(const string_view &content) {
   std::regex pattern("(\\d+),(\\d+),(\\d+)~(\\d+),(\\d+),(\\d+)");
   std::smatch base_match;
   vector<Brick> bricks;
+  for (auto line : content | std::views::split('\n') |
+                       std::views::filter([](auto x) { return !x.empty(); })) {
 
-  for (string line; getline(stream, line);) {
-    if (std::regex_match(line, base_match, pattern)) {
+    string sline(line.begin(), line.end());
+    if (std::regex_match(sline, base_match, pattern)) {
       vector<int> coords;
       transform(base_match.begin() + 1, base_match.end(), back_inserter(coords),
                 [](string s) { return stoi(s); });
@@ -200,38 +202,20 @@ vector<pair<int, int>> findDesintegrate(const Graph &graph) {
   return desint;
 }
 
-int main(int argc, char **argv) {
-  if (argc != 2) {
-    cout << "Missing argument" << endl;
-    throw;
-  }
+auto part_one(const vector<Brick> &cbricks) {
+  vector<Brick> bricks(cbricks.begin(), cbricks.end());
+  auto graph = getSupportGraph(bricks);
+  return findSafeBricks(graph).size();
+}
 
-  ifstream inputFile(argv[1]);
-
-  // Check if the file is open
-  if (!inputFile.is_open()) {
-    cerr << "Error opening the file!" << endl;
-    return 1; // Return an error code
-  }
-
-  // Parse input
-  auto bricks = parse(inputFile);
-
+auto part_two(const vector<Brick> &cbricks) {
+  vector<Brick> bricks(cbricks.begin(), cbricks.end());
   // Create graph
   auto graph = getSupportGraph(bricks);
-
-  // Supported
-  cout << "Part a: " << findSafeBricks(graph).size() << endl;
-
   // Desintegrations
   auto desint = findDesintegrate(graph);
-  cout << "Part b: "
-       << accumulate(desint.begin(), desint.end(), 0,
-                     [](int acc, pair<int, int> &p) { return acc + p.second; })
-       << endl;
 
-  // Close file
-  inputFile.close();
-
-  return 0;
+  return accumulate(desint.begin(), desint.end(), 0,
+                    [](int acc, pair<int, int> &p) { return acc + p.second; });
 }
+} // namespace Day22
